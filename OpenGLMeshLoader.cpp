@@ -43,10 +43,18 @@ int cameraZoom = 0;
 Model_3DS model_house;
 Model_3DS model_tree;
 Model_3DS model_brain;
+Model_3DS model_zombieMale;
+Model_3DS model_zombieFemale;
+Model_3DS model_hazmat;
+Model_3DS model_alienGray;
+Model_3DS model_alienGreen;
+Model_3DS model_star;
+Model_3DS model_spaceship;
 //Model_3DS model_hazmat;
 
 // Textures
 GLTexture tex_ground;
+GLTexture tex_zombieMale;
 
 //=======================================================================
 // Lighting Configuration Function
@@ -146,7 +154,6 @@ void RenderGround()
 	glColor3f(0.6, 0.6, 0.6);	// Dim the ground texture a bit
 
 	glEnable(GL_TEXTURE_2D);	// Enable 2D texturing
-
 	glBindTexture(GL_TEXTURE_2D, tex_ground.texture[0]);	// Bind the ground texture
 
 	glPushMatrix();
@@ -168,14 +175,154 @@ void RenderGround()
 	glColor3f(1, 1, 1);	// Set material back to white instead of grey used for the ground texture.
 }
 
+void drawHazmat() {
+
+	glPushMatrix();
+	glTranslatef(17, 3, 17);
+	glScalef(2.4, 2.4, 2.4);
+	glRotatef(90.f, 1, 0, 0);
+	model_hazmat.Draw();
+
+	glPopMatrix();
+
+}
+
+void drawZombieMale() {
+	//zombie-male model
+
+	tex_zombieMale.Use();
+	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[1]);
+	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[2]);
+	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[3]);
+	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[4]);
+
+	glPushMatrix();
+	glTranslatef(15, 3, 15);
+	glScalef(2.4, 2.4, 2.4);
+	glRotatef(90.f, 1, 0, 0);
+	model_zombieMale.Draw();
+
+	glPopMatrix();
+
+}
+
+void drawZombieFemale() {
+	//zombie-female model
+
+	tex_zombieMale.Use();
+
+	glPushMatrix();
+	glTranslatef(15, 3, 10);
+	glScalef(2.4, 2.4, 2.4);
+	glRotatef(90.f, 1, 0, 0);
+	model_zombieFemale.Draw();
+
+	glPopMatrix();
+
+
+}
+
+void drawAlienGray() {
+	//zombie-female model
+
+
+	glPushMatrix();
+	glTranslatef(5, 3, 15);
+	glScalef(2.4, 2.4, 2.4);
+	glRotatef(90.f, 1, 0, 0);
+	glColor3f(0.18, 0.18, 0.18);
+	model_alienGray.Draw();
+
+	glPopMatrix();
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+
+}
+
+void drawAlienGreen() {
+	//zombie-female model
+
+	glPushMatrix();
+	glTranslatef(15, 3, 20);
+	glScalef(2.4, 2.4, 2.4);
+	glRotatef(90.f, 1, 0, 0);
+	glColor3f(0.18, 0.22, 0.16);
+	model_alienGreen.Draw();
+
+	glPopMatrix();
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+
+}
+
+void drawStar() {
+	//zombie-female model
+
+	glPushMatrix();
+	
+	glColor3f(1.0f, 1.0f, 0.0f);
+
+	glTranslatef(7, 1, 17);
+	glScalef(0.4, 0.4, 1);
+	glRotatef(90.f, 1, 0, 1);
+	model_star.Draw();
+
+	glPopMatrix();
+
+	glColor3f(1, 1, 1);
+}
+
+void drawSpaceship() {
+	//zombie-female model
+
+	glPushMatrix();
+	glTranslatef(17, 1, 25);
+	glScalef(4,4,4);
+	glRotatef(90.f, 1, 0, 0);
+	glColor3f(0.18, 0.18, 0.18);
+	model_spaceship.Draw();
+
+	glPopMatrix();
+	glColor3f(1,1,1);
+}
+
+void drawBrain() {
+	//brain model
+	glPushMatrix();
+	glColor3f(0.9686f, 0.5686f, 0.5255f);
+	glTranslatef(10, 2, 10);
+	glScalef(0.4, 0.4, 0.4);
+	model_brain.Draw();
+	glPopMatrix();
+
+	glColor3f(1, 1, 1);
+}
+
+void drawHouse() {
+	// Draw house Model
+	glPushMatrix();
+	glRotatef(90.f, 1, 0, 0);
+	model_house.Draw();
+	glPopMatrix();
+
+}
+
+void drawTree() {
+	// Draw Tree Model
+	glPushMatrix();
+	glTranslatef(10, 0, 0);
+	glScalef(0.7, 0.7, 0.7);
+	model_tree.Draw();
+	glPopMatrix();
+}
+
 //=======================================================================
 // Display Function
 //=======================================================================
 void myDisplay(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
 
 	GLfloat lightIntensity[] = { 0.7, 0.7, 0.7, 1.0f };
 	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
@@ -185,33 +332,25 @@ void myDisplay(void)
 	// Draw Ground
 	RenderGround();
 
-	// Draw Tree Model
-	glPushMatrix();
-	glTranslatef(10, 0, 0);
-	glScalef(0.7, 0.7, 0.7);
-	model_tree.Draw();
-	glPopMatrix();
+	drawTree();
 
-	// Draw house Model
-	glPushMatrix();
-	glRotatef(90.f, 1, 0, 0);
-	model_house.Draw();
-	glPopMatrix();
+	drawHouse();
 
-	//brain model
-	glPushMatrix();
-	glColor3f(0.9686f, 0.5686f, 0.5255f);
-	glTranslatef(10, 2, 10);
-	glScalef(0.7, 0.7, 0.7);
-	model_brain.Draw();
-	glPopMatrix();
+	drawBrain();
 
+	drawZombieMale();
+	
+	drawZombieFemale();
+	
+	drawAlienGray();
+	
+	drawAlienGreen();
+	
+	drawStar();
 
-	//hazmat model
-//	glPushMatrix();
-//	glTranslatef(15, 15, 15);
-//	model_hazmat.Draw();
-//	glPopMatrix();
+	drawSpaceship();
+
+	//drawHazmat();
 
 	//sky box
 	glPushMatrix();
@@ -228,8 +367,6 @@ void myDisplay(void)
 
 
 	glPopMatrix();
-
-
 
 	glutSwapBuffers();
 }
@@ -379,11 +516,23 @@ void LoadAssets()
 	model_house.Load("Models/house/house.3DS");
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_brain.Load("Models/brain/brain.3ds");
-	//model_hazmat.Load("Models/hazmat/fumigator.3ds");
+	model_zombieMale.Load("Models/Zombie-male/W6VXUFDDZEWHLDMF1TDFEHLSQ.3ds");
+	model_zombieFemale.Load("Models/Zombie-female/YX7E6SXK5QENDHI2C2SDRHFV9.3ds");
+	model_alienGray.Load("Models/Alien-gray/RHF0I8IA4NR339RPGEX2E5UU4.3ds");
+	model_alienGreen.Load("Models/Alien-green/K0Y3926GODW8EXPFE835EUWG7.3ds");
+	model_star.Load("Models/Star/5ebea14b8ef94f57b1f37ac18211f70e.3ds");
+	model_spaceship.Load("Models/Spaceship/IPFJ80NKQ01QATOPYPW2HQKAD.3ds");
+	//model_hazmat.Load("Models/Hazmat/IPFJ80NKQ01QATOPYPW2HQKAD.3ds");
+	
 
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
+	tex_zombieMale.Load("models/Zombie-male/t0045_0.bmp");
+	//tex_zombieMale.Load("Models/Zombie-male/t0045_2.bmp");
+	//tex_zombieMale.Load("Models/Zombie-male/t0046_1.bmp");
+	//tex_zombieMale.Load("Models/Zombie-male/t0047_0.bmp");
+	//tex_zombieMale.Load("Models/Zombie-male/t0071_1.bmp");
 }
 
 //=======================================================================
