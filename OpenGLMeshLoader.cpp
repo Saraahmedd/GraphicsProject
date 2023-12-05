@@ -3,6 +3,8 @@
 #include "GLTexture.h"
 #include <glut.h>
 
+int count;
+
 int WIDTH = 1280;
 int HEIGHT = 720;
 
@@ -15,16 +17,13 @@ GLdouble aspectRatio = (GLdouble)WIDTH / (GLdouble)HEIGHT;
 GLdouble zNear = 0.1;
 GLdouble zFar = 1000;
 
+
 class Vector
 {
 public:
 	GLdouble x, y, z;
 	Vector() {}
 	Vector(GLdouble _x, GLdouble _y, GLdouble _z) : x(_x), y(_y), z(_z) {}
-	//================================================================================================//
-	// Operator Overloading; In C++ you can override the behavior of operators for you class objects. //
-	// Here we are overloading the += operator to add a given value to all vector coordinates.        //
-	//================================================================================================//
 	void operator +=(float value)
 	{
 		x += value;
@@ -33,8 +32,8 @@ public:
 	}
 };
 
-Vector Eye(20, 5, 20);
-Vector At(0, 0, 0);
+Vector Eye(10, 10, 40);
+Vector At(10, 0, 0);
 Vector Up(0, 1, 0);
 
 int cameraZoom = 0;
@@ -44,6 +43,7 @@ Model_3DS model_house;
 Model_3DS model_tree;
 Model_3DS model_brain;
 Model_3DS model_zombieMale;
+Model_3DS model_zombieMale2;
 Model_3DS model_zombieFemale;
 Model_3DS model_hazmat;
 Model_3DS model_alienGray;
@@ -55,6 +55,30 @@ Model_3DS model_spaceship;
 // Textures
 GLTexture tex_ground;
 GLTexture tex_zombieMale;
+
+//model positions
+float playerPos[3] = { 7, 3, 10 }; int playerRot = -90.0;
+float zombieMalePos[3] = { 15, 3, 15 };
+float zombieFemalePos[3] = { 15, 3, 10 };
+float alienGrayPos[3] = { 5, 3, 15 };
+float alienGreenPos[3] = { 5, 3, 20 };
+float spaceshipPos[3] = { 17, 1, 25 };
+float housePos[3] = { 5,0,5 };
+
+float starsPos[3][3] = { { 7, 1, 20 },
+						 { 6, 1, 15 },
+						 { 5,1,14 } };
+
+float brainsPos[3][3] = { { 13,2,10 },
+						 { 13,2,13 },
+						 { 13,2,15 } };
+
+//controls
+int level = 1, score = 0;
+float playerHealth = 1.0; // Full health
+bool stars[3] = { false,false,false };
+bool brains[3] = { false,false,false };
+bool gameOver, gameResult, starsFound, brainsFound;
 
 //=======================================================================
 // Lighting Configuration Function
@@ -104,6 +128,12 @@ void InitMaterial()
 	// Set Material's Shine value (0->128)
 	GLfloat shininess[] = { 96.0f };
 	glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
+}
+
+bool checkIntersect(float playerPostions[], float balloon[]) {
+	float x1 = playerPostions[0] - 1, x2 = playerPostions[0] + 1;
+	float z1 = playerPostions[2] - 1, z2 = playerPostions[2] + 1;
+	return (balloon[0] >= x1 && balloon[0] <= x2 && balloon[2] >= z1 && balloon[2] <= z2);
 }
 
 //=======================================================================
@@ -175,15 +205,32 @@ void RenderGround()
 	glColor3f(1, 1, 1);	// Set material back to white instead of grey used for the ground texture.
 }
 
-void drawHazmat() {
+//void drawHazmat() {
+
+//	glPushMatrix();
+//	glTranslatef(17, 3, 17);
+//	glScalef(2.4, 2.4, 2.4);
+//	glRotatef(90.f, 1, 0, 0);
+//	model_hazmat.Draw();
+
+//	glPopMatrix();
+
+//}
+
+void drawPlayer() {
 
 	glPushMatrix();
-	glTranslatef(17, 3, 17);
+	glColor3f(0.3, 0, 0.18);
+
+	glTranslatef(playerPos[0], playerPos[1], playerPos[2]);
 	glScalef(2.4, 2.4, 2.4);
 	glRotatef(90.f, 1, 0, 0);
-	model_hazmat.Draw();
+	glRotatef(playerRot, 0, 0, 1);
+	model_zombieMale2.Draw();
 
 	glPopMatrix();
+
+	glColor3f(1.0f, 1.0f, 1.0f);
 
 }
 
@@ -197,12 +244,13 @@ void drawZombieMale() {
 	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[4]);
 
 	glPushMatrix();
-	glTranslatef(15, 3, 15);
+	glTranslatef(zombieMalePos[0], zombieMalePos[1], zombieMalePos[2]);
 	glScalef(2.4, 2.4, 2.4);
 	glRotatef(90.f, 1, 0, 0);
 	model_zombieMale.Draw();
 
 	glPopMatrix();
+
 
 }
 
@@ -212,7 +260,7 @@ void drawZombieFemale() {
 	tex_zombieMale.Use();
 
 	glPushMatrix();
-	glTranslatef(15, 3, 10);
+	glTranslatef(zombieFemalePos[0], zombieFemalePos[1], zombieFemalePos[2]);
 	glScalef(2.4, 2.4, 2.4);
 	glRotatef(90.f, 1, 0, 0);
 	model_zombieFemale.Draw();
@@ -227,7 +275,7 @@ void drawAlienGray() {
 
 
 	glPushMatrix();
-	glTranslatef(5, 3, 15);
+	glTranslatef(alienGrayPos[0], alienGrayPos[1], alienGrayPos[2]);
 	glScalef(2.4, 2.4, 2.4);
 	glRotatef(90.f, 1, 0, 0);
 	glColor3f(0.18, 0.18, 0.18);
@@ -237,14 +285,13 @@ void drawAlienGray() {
 
 	glColor3f(1.0f, 1.0f, 1.0f);
 
-
 }
 
 void drawAlienGreen() {
 	//zombie-female model
 
 	glPushMatrix();
-	glTranslatef(15, 3, 20);
+	glTranslatef(alienGreenPos[0], alienGreenPos[1], alienGreenPos[2]);
 	glScalef(2.4, 2.4, 2.4);
 	glRotatef(90.f, 1, 0, 0);
 	glColor3f(0.18, 0.22, 0.16);
@@ -258,17 +305,20 @@ void drawAlienGreen() {
 
 void drawStar() {
 	//zombie-female model
-
-	glPushMatrix();
 	
 	glColor3f(1.0f, 1.0f, 0.0f);
 
-	glTranslatef(7, 1, 17);
-	glScalef(0.4, 0.4, 1);
-	glRotatef(90.f, 1, 0, 1);
-	model_star.Draw();
+	for (int i = 0; i < 3; i++) {
+		if (!stars[i]) {
+			glPushMatrix();
+			glTranslatef(starsPos[i][0], starsPos[i][1], starsPos[i][2]);
+			glScalef(0.4, 0.4, 1);
+			glRotatef(90.f, 1, 0, 1);
+			model_star.Draw();
 
-	glPopMatrix();
+			glPopMatrix();
+		}
+	}
 
 	glColor3f(1, 1, 1);
 }
@@ -277,7 +327,7 @@ void drawSpaceship() {
 	//zombie-female model
 
 	glPushMatrix();
-	glTranslatef(17, 1, 25);
+	glTranslatef(spaceshipPos[0], spaceshipPos[1], spaceshipPos[2]);
 	glScalef(4,4,4);
 	glRotatef(90.f, 1, 0, 0);
 	glColor3f(0.18, 0.18, 0.18);
@@ -289,12 +339,17 @@ void drawSpaceship() {
 
 void drawBrain() {
 	//brain model
-	glPushMatrix();
 	glColor3f(0.9686f, 0.5686f, 0.5255f);
-	glTranslatef(10, 2, 10);
-	glScalef(0.4, 0.4, 0.4);
-	model_brain.Draw();
-	glPopMatrix();
+
+	for (int i = 0; i < 3; i++) {
+		if (!brains[i]) {
+			glPushMatrix();
+			glTranslatef(brainsPos[i][0], brainsPos[i][1], brainsPos[i][2]);
+			glScalef(0.3, 0.3, 0.3);
+			model_brain.Draw();
+			glPopMatrix();
+		}
+	}
 
 	glColor3f(1, 1, 1);
 }
@@ -302,11 +357,89 @@ void drawBrain() {
 void drawHouse() {
 	// Draw house Model
 	glPushMatrix();
+	glTranslatef(housePos[0], housePos[1], housePos[2]);
 	glRotatef(90.f, 1, 0, 0);
 	model_house.Draw();
 	glPopMatrix();
 
 }
+
+
+void DrawHealthBar() {
+	glMatrixMode(GL_PROJECTION);
+	glPushMatrix();
+	glLoadIdentity();
+	gluOrtho2D(0, WIDTH, 0, HEIGHT);
+
+	glMatrixMode(GL_MODELVIEW);
+	glPushMatrix();
+	glLoadIdentity();
+
+	// Draw the health bar background
+	glColor3f(0.3f, 0.3f, 0.3f); // Grey background
+	glBegin(GL_QUADS);
+	glVertex2f(10, HEIGHT - 30);
+	glVertex2f(210 - 200 * playerHealth, HEIGHT - 30);
+	glVertex2f(210 - 200 * playerHealth, HEIGHT - 10);
+	glVertex2f(10, HEIGHT - 10);
+	glEnd();
+
+	// Draw the health bar
+	glColor3f(0.0f, 1.0f, 0.0f); // Green health
+	glBegin(GL_QUADS);
+	glVertex2f(10, HEIGHT - 30);
+	glVertex2f(10 + 200 * playerHealth, HEIGHT - 30); // Width based on health
+	glVertex2f(10 + 200 * playerHealth, HEIGHT - 10);
+	glVertex2f(10, HEIGHT - 10);
+	glEnd();
+
+	// Set the text color (white)
+	glColor3f(0.0, 0.0, 0.0);
+
+	// Set the position to display ""
+	float xPos = 300;  // Adjust the X position
+	float yPos = HEIGHT - 30;   // Adjust the Y position
+
+	glRasterPos2f(xPos, yPos);
+	const char* text = ("Score: ");
+	int length = strlen(text);
+	for (int i = 0; i < length; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text[i]);
+	}
+
+	// Set the position to display ""
+	float xPos1 = 500;  // Adjust the X position
+	float yPos1 = HEIGHT - 30;   // Adjust the Y position
+
+	glRasterPos2f(xPos1, yPos1);
+	const char* text1 = "Level: ";
+	int length1 = strlen(text1);
+	for (int i = 0; i < length1; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text1[i]);
+	}
+
+	// Set the position to display ""
+	float xPos2 = 700;  // Adjust the X position
+	float yPos2 = HEIGHT - 30;   // Adjust the Y position
+
+	glRasterPos2f(xPos2, yPos2);
+	const char* text2 = "Time: ";
+	int length2 = strlen(text2);
+	for (int i = 0; i < length2; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text2[i]);
+	}
+
+	// Restore the original matrices
+	glMatrixMode(GL_PROJECTION);
+	glPopMatrix();
+	glMatrixMode(GL_MODELVIEW);
+	glPopMatrix();
+
+
+	glColor3f(1.0, 1.0, 1.0);
+}
+
+
 
 void drawTree() {
 	// Draw Tree Model
@@ -350,6 +483,8 @@ void myDisplay(void)
 
 	drawSpaceship();
 
+	drawPlayer();
+
 	//drawHazmat();
 
 	//sky box
@@ -368,12 +503,16 @@ void myDisplay(void)
 
 	glPopMatrix();
 
+	DrawHealthBar();
+
 	glutSwapBuffers();
 }
 
 void myKeyboard(unsigned char button, int x, int y)
 {
 	const GLdouble cameraSpeed = 0.5; // Adjust as needed
+	const GLdouble upDownSpeed = 0.1;
+	const GLdouble movement = 0.1;
 
 	switch (button)
 	{
@@ -389,11 +528,51 @@ void myKeyboard(unsigned char button, int x, int y)
 	case 'w': // Move right
 		Eye.z -= cameraSpeed;
 		break;
+
+	case 'k': // Move player forward
+		if (playerPos[2] + movement <= 100) // Check boundary along Z-axis
+		{
+			playerRot = -90.0;
+			playerPos[2] += movement;
+		}
+		break;
+
+	case 'i': // Move player backward
+		if (playerPos[2] - movement >= 0) // Check boundary along Z-axis
+		{
+			playerRot = 90.0;
+			playerPos[2] -= movement;
+		}
+		break;
+
+	case 'l': // Move player right
+		if (playerPos[0] + movement <= 100) // Check boundary along X-axis
+		{
+			playerRot = 180.0;
+			playerPos[0] += movement;
+		}
+		break;
+
+	case 'j': // Move player left
+		if (playerPos[0] - movement >= 0) // Check boundary along X-axis
+		{
+			playerRot = 0.0;
+			playerPos[0] -= movement;
+		}
+		break;
+
+		break;
 	case 'e':
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		break;
 	case 'r':
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		break;
+	case '9': // Move UP vector upwards
+		Eye.y += upDownSpeed;
+		break;
+	case '0': // Move UP vector downwards
+		Eye.y -= upDownSpeed;
 		break;
 	case 27: // ESC key
 		exit(0);
@@ -517,6 +696,7 @@ void LoadAssets()
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_brain.Load("Models/brain/brain.3ds");
 	model_zombieMale.Load("Models/Zombie-male/W6VXUFDDZEWHLDMF1TDFEHLSQ.3ds");
+	model_zombieMale2.Load("Models/Zombie-male/W6VXUFDDZEWHLDMF1TDFEHLSQ.3ds");
 	model_zombieFemale.Load("Models/Zombie-female/YX7E6SXK5QENDHI2C2SDRHFV9.3ds");
 	model_alienGray.Load("Models/Alien-gray/RHF0I8IA4NR339RPGEX2E5UU4.3ds");
 	model_alienGreen.Load("Models/Alien-green/K0Y3926GODW8EXPFE835EUWG7.3ds");
@@ -533,6 +713,60 @@ void LoadAssets()
 	//tex_zombieMale.Load("Models/Zombie-male/t0046_1.bmp");
 	//tex_zombieMale.Load("Models/Zombie-male/t0047_0.bmp");
 	//tex_zombieMale.Load("Models/Zombie-male/t0071_1.bmp");
+}
+
+void Timer(int value) {
+	count++;
+
+	if (count == 100 && !gameOver && !starsFound) {
+		stars[0] = stars[1] = stars[2] = true;
+		gameOver = true;
+		gameResult = false;
+	}
+
+
+	bool f = true;
+	for (int i = 0; i < 3 && !gameOver; i++) {
+		if (stars[i] == false && checkIntersect(playerPos, starsPos[i])) {
+			stars[i] = true;
+			score += 5;
+		}
+		if (!starsFound) {
+			f = f && stars[i];
+		}
+	}
+
+	if (!starsFound && f && !gameOver) {
+		starsFound = true;
+		gameOver = true;
+		gameResult = true;
+	}
+
+	if (count == 100 && !gameOver && !brainsFound) {
+		brains[0] = brains[1] = brains[2] = true;
+		gameOver = true;
+		gameResult = false;
+	}
+
+	bool f2 = true;
+	for (int i = 0; i < 3 && !gameOver; i++) {
+		if (brains[i] == false && checkIntersect(playerPos, brainsPos[i])) {
+			brains[i] = true;
+			score += 5;
+		}
+		if (!brainsFound) {
+			f = f && brains[i];
+		}
+	}
+
+	if (!brainsFound && f && !gameOver) {
+		brainsFound = true;
+		gameOver = true;
+		gameResult = true;
+	}
+
+	glutTimerFunc(500, Timer, 0);
+	glutPostRedisplay();
 }
 
 //=======================================================================
@@ -571,6 +805,7 @@ void main(int argc, char** argv)
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_COLOR_MATERIAL);
 
+	glutTimerFunc(0, Timer, 0);
 	glShadeModel(GL_SMOOTH);
 
 	glutMainLoop();
