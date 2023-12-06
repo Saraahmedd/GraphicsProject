@@ -2,6 +2,10 @@
 #include "Model_3DS.h"
 #include "GLTexture.h"
 #include <glut.h>
+#include <cmath> 
+#include <string>
+
+#define M_PI 3.14159265358979323846
 
 int count;
 
@@ -57,13 +61,13 @@ GLTexture tex_ground;
 GLTexture tex_zombieMale;
 
 //model positions
-float playerPos[3] = { 7, 3, 10 }; int playerRot = -90.0;
+float playerPos[3] = { 7, 0, 10 }; int playerRot = 0.0;
 float zombieMalePos[3] = { 15, 3, 15 };
 float zombieFemalePos[3] = { 15, 3, 10 };
 float alienGrayPos[3] = { 5, 3, 15 };
 float alienGreenPos[3] = { 5, 3, 20 };
 float spaceshipPos[3] = { 17, 1, 25 };
-float housePos[3] = { 5,0,5 };
+float housePos[3] = { 40,0,10 };
 
 float starsPos[3][3] = { { 7, 1, 20 },
 						 { 6, 1, 15 },
@@ -74,8 +78,8 @@ float brainsPos[3][3] = { { 13,2,10 },
 						 { 13,2,15 } };
 
 //controls
-int level = 1, score = 0;
-float playerHealth = 1.0; // Full health
+int level = 1, score = 0, cameraMode = 3 ;
+float playerHealth = 100.0, maxHealth = 100.0; // Full health
 bool stars[3] = { false,false,false };
 bool brains[3] = { false,false,false };
 bool gameOver, gameResult, starsFound, brainsFound;
@@ -220,17 +224,13 @@ void RenderGround()
 void drawPlayer() {
 
 	glPushMatrix();
-	glColor3f(0.3, 0, 0.18);
 
 	glTranslatef(playerPos[0], playerPos[1], playerPos[2]);
 	glScalef(2.4, 2.4, 2.4);
-	glRotatef(90.f, 1, 0, 0);
-	glRotatef(playerRot, 0, 0, 1);
+	glRotatef(playerRot, 0, 1, 0);
 	model_zombieMale2.Draw();
 
 	glPopMatrix();
-
-	glColor3f(1.0f, 1.0f, 1.0f);
 
 }
 
@@ -376,20 +376,20 @@ void DrawHealthBar() {
 	glLoadIdentity();
 
 	// Draw the health bar background
-	glColor3f(0.3f, 0.3f, 0.3f); // Grey background
+	glColor3f(0.0f, 1.0f, 0.0f); // Green background
 	glBegin(GL_QUADS);
 	glVertex2f(10, HEIGHT - 30);
-	glVertex2f(210 - 200 * playerHealth, HEIGHT - 30);
-	glVertex2f(210 - 200 * playerHealth, HEIGHT - 10);
+	glVertex2f(10 + 200 * (playerHealth / 100), HEIGHT - 30); // Width based on health
+	glVertex2f(10 + 200 * (playerHealth / 100), HEIGHT - 10);
 	glVertex2f(10, HEIGHT - 10);
 	glEnd();
 
 	// Draw the health bar
-	glColor3f(0.0f, 1.0f, 0.0f); // Green health
+	glColor3f(0.3f, 0.3f, 0.3f); // Grey health
 	glBegin(GL_QUADS);
 	glVertex2f(10, HEIGHT - 30);
-	glVertex2f(10 + 200 * playerHealth, HEIGHT - 30); // Width based on health
-	glVertex2f(10 + 200 * playerHealth, HEIGHT - 10);
+	glVertex2f(210, HEIGHT - 30);
+	glVertex2f(210, HEIGHT - 10);
 	glVertex2f(10, HEIGHT - 10);
 	glEnd();
 
@@ -402,9 +402,11 @@ void DrawHealthBar() {
 
 	glRasterPos2f(xPos, yPos);
 	const char* text = ("Score: ");
-	int length = strlen(text);
+	std::string fullText = text + std::to_string(score);
+	const char* displayText = fullText.c_str();
+	int length = strlen(displayText);
 	for (int i = 0; i < length; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text[i]);
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, displayText[i]);
 	}
 
 	// Set the position to display ""
@@ -413,9 +415,11 @@ void DrawHealthBar() {
 
 	glRasterPos2f(xPos1, yPos1);
 	const char* text1 = "Level: ";
-	int length1 = strlen(text1);
+	std::string fullText1 = text1 + std::to_string(level);
+	const char* displayText1 = fullText1.c_str();
+	int length1 = strlen(displayText1);
 	for (int i = 0; i < length1; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text1[i]);
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, displayText1[i]);
 	}
 
 	// Set the position to display ""
@@ -424,9 +428,11 @@ void DrawHealthBar() {
 
 	glRasterPos2f(xPos2, yPos2);
 	const char* text2 = "Time: ";
-	int length2 = strlen(text2);
+	std::string fullText2 = text2 + std::to_string(count);
+	const char* displayText2 = fullText2.c_str();
+	int length2 = strlen(displayText2);
 	for (int i = 0; i < length2; i++) {
-		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, text2[i]);
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, displayText2[i]);
 	}
 
 	// Restore the original matrices
@@ -513,6 +519,8 @@ void myKeyboard(unsigned char button, int x, int y)
 	const GLdouble cameraSpeed = 0.5; // Adjust as needed
 	const GLdouble upDownSpeed = 0.1;
 	const GLdouble movement = 0.1;
+	const GLdouble radiansPerDegree = M_PI / 180.0; // Convert degrees to radians
+
 
 	switch (button)
 	{
@@ -532,7 +540,7 @@ void myKeyboard(unsigned char button, int x, int y)
 	case 'k': // Move player forward
 		if (playerPos[2] + movement <= 100) // Check boundary along Z-axis
 		{
-			playerRot = -90.0;
+			playerRot = 0.0;
 			playerPos[2] += movement;
 		}
 		break;
@@ -540,7 +548,7 @@ void myKeyboard(unsigned char button, int x, int y)
 	case 'i': // Move player backward
 		if (playerPos[2] - movement >= 0) // Check boundary along Z-axis
 		{
-			playerRot = 90.0;
+			playerRot = 180.0;
 			playerPos[2] -= movement;
 		}
 		break;
@@ -548,7 +556,7 @@ void myKeyboard(unsigned char button, int x, int y)
 	case 'l': // Move player right
 		if (playerPos[0] + movement <= 100) // Check boundary along X-axis
 		{
-			playerRot = 180.0;
+			playerRot = 90.0;
 			playerPos[0] += movement;
 		}
 		break;
@@ -556,10 +564,9 @@ void myKeyboard(unsigned char button, int x, int y)
 	case 'j': // Move player left
 		if (playerPos[0] - movement >= 0) // Check boundary along X-axis
 		{
-			playerRot = 0.0;
+			playerRot = -90.0;
 			playerPos[0] -= movement;
 		}
-		break;
 
 		break;
 	case 'e':
@@ -568,17 +575,48 @@ void myKeyboard(unsigned char button, int x, int y)
 	case 'r':
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		break;
+
 	case '9': // Move UP vector upwards
 		Eye.y += upDownSpeed;
 		break;
 	case '0': // Move UP vector downwards
 		Eye.y -= upDownSpeed;
 		break;
+
+	case '1':
+		cameraMode = 1;
+		Eye.x = playerPos[0] + cos(playerRot * M_PI / 180.0);
+		Eye.y = playerPos[1] + 5;
+		Eye.z = playerPos[2] + sin(playerRot * M_PI / 180.0);
+		break;
+	case '3':
+		cameraMode = 3;
+		Eye.x = 10;
+		Eye.y = 10;
+		Eye.z = 40;
+		break;
 	case 27: // ESC key
 		exit(0);
 		break;
+
 	default:
 		break;
+	}
+
+	if (cameraMode == 1) {
+		// Update the Eye position to be at the player's position
+		Eye.x = playerPos[0];
+		Eye.y = playerPos[1] + 5; // Adjust height if needed
+		Eye.z = playerPos[2];
+
+		// Calculate the direction the player is looking
+		GLdouble lookX = sin(playerRot * radiansPerDegree);
+		GLdouble lookZ = cos(playerRot * radiansPerDegree);
+
+		// Update the At vector to be in the direction the player is facing
+		At.x = Eye.x + lookX;
+		At.y = Eye.y;
+		At.z = Eye.z + lookZ;
 	}
 
 	// Update camera
@@ -696,7 +734,7 @@ void LoadAssets()
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_brain.Load("Models/brain/brain.3ds");
 	model_zombieMale.Load("Models/Zombie-male/W6VXUFDDZEWHLDMF1TDFEHLSQ.3ds");
-	model_zombieMale2.Load("Models/Zombie-male/W6VXUFDDZEWHLDMF1TDFEHLSQ.3ds");
+	model_zombieMale2.Load("Models/Player/sci_fi5.3ds");
 	model_zombieFemale.Load("Models/Zombie-female/YX7E6SXK5QENDHI2C2SDRHFV9.3ds");
 	model_alienGray.Load("Models/Alien-gray/RHF0I8IA4NR339RPGEX2E5UU4.3ds");
 	model_alienGreen.Load("Models/Alien-green/K0Y3926GODW8EXPFE835EUWG7.3ds");
@@ -715,6 +753,26 @@ void LoadAssets()
 	//tex_zombieMale.Load("Models/Zombie-male/t0071_1.bmp");
 }
 
+void decrementHealth(int damage) { // 0-100 damage
+	if (playerHealth >= damage) {
+		playerHealth -= damage;
+	}
+	else {
+		playerHealth = 0;
+		gameOver = true;
+		gameResult = false;
+	}
+}
+
+void incrementHealth(int heal) {
+	if (playerHealth+heal <= maxHealth) {
+		playerHealth += heal;
+	}
+	else {
+		playerHealth = maxHealth;
+	}
+}
+
 void Timer(int value) {
 	count++;
 
@@ -724,7 +782,7 @@ void Timer(int value) {
 		gameResult = false;
 	}
 
-
+	//Alien game (Level 2)
 	bool f = true;
 	for (int i = 0; i < 3 && !gameOver; i++) {
 		if (stars[i] == false && checkIntersect(playerPos, starsPos[i])) {
@@ -742,6 +800,16 @@ void Timer(int value) {
 		gameResult = true;
 	}
 
+	if (checkIntersect(playerPos, alienGreenPos)) {
+		decrementHealth(10);
+	}
+
+	if (checkIntersect(playerPos, alienGrayPos)) {
+		decrementHealth(10);
+	}
+
+
+	//Zombies game (Level 1)
 	if (count == 100 && !gameOver && !brainsFound) {
 		brains[0] = brains[1] = brains[2] = true;
 		gameOver = true;
@@ -765,7 +833,15 @@ void Timer(int value) {
 		gameResult = true;
 	}
 
-	glutTimerFunc(500, Timer, 0);
+	if (checkIntersect(playerPos, zombieMalePos)) {
+		decrementHealth(10);
+	}
+
+	if (checkIntersect(playerPos, zombieFemalePos)) {
+		decrementHealth(10);
+	}
+
+	glutTimerFunc(1000, Timer, 0);
 	glutPostRedisplay();
 }
 
