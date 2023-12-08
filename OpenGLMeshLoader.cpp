@@ -689,29 +689,33 @@ void myDisplay(void)
 
 	drawTree();
 
-	drawHouse();
+	if (gameLevel == 1) {
+		drawHouse();
 
-	drawBrain();
+		drawBrain();
 
-	if (maleZombieAlive) {
-		drawZombieMale();
-	}
-	
-	if (femaleZombieAlive) {
-		drawZombieFemale();
-	}
-	
-	if (grayAlienAlive) {
-		drawAlienGray();
-	}
-	
-	if (greenAlienAlive) {
-		drawAlienGreen();
-	}
-	
-	drawStar();
+		if (maleZombieAlive) {
+			drawZombieMale();
+		}
 
-	drawSpaceship();
+		if (femaleZombieAlive) {
+			drawZombieFemale();
+		}
+	}
+	else {
+
+		if (grayAlienAlive) {
+			drawAlienGray();
+		}
+
+		if (greenAlienAlive) {
+			drawAlienGreen();
+		}
+
+		drawStar();
+
+		drawSpaceship();
+	}
 
 	drawPlayer();
 
@@ -747,7 +751,7 @@ void myDisplay(void)
 
 	DrawHealthBar();
 
-
+	if(cameraMode == 1)
 	drawCrosshair();
 
 	for (const auto& bullet : bullets) {
@@ -1022,21 +1026,95 @@ void incrementHealth(int heal) {
 void Timer(int value) {
 	count++;
 
-	if (count == 100 && !gameOver && !starsFound) {
-		stars[0] = stars[1] = stars[2] = true;
-		gameOver = true;
-		gameResult = false;
+
+	if (gameLevel == 1) {
+
+		// Check collision with the house
+		if (checkHouseCollision()) {
+			gameLevel = 2;
+			count = 0;
+		}
+
+		if (checkIntersect(playerPos, zombieMalePos)) {
+			decrementHealth(10);
+		}
+
+		if (checkIntersect(playerPos, zombieFemalePos)) {
+			decrementHealth(10);
+		}
+
+
+
+		//Zombies game (Level 1)
+		if (count == 100 && !gameOver && !brainsFound) {
+			brains[0] = brains[1] = brains[2] = true;
+			gameOver = true;
+			gameResult = false;
+		}
+
+		bool f2 = true;
+		bool f = true;
+		for (int i = 0; i < 3 && !gameOver; i++) {
+			if (brains[i] == false && checkIntersect(playerPos, brainsPos[i])) {
+				brains[i] = true;
+				score += 5;
+			}
+			if (!brainsFound) {
+				f = f && brains[i];
+			}
+		}
+
+		if (!brainsFound && f && !gameOver) {
+			brainsFound = true;
+			gameOver = true;
+			gameResult = true;
+		}
+
 	}
-	// Check collision with the house
-	if (checkHouseCollision()) {
-		gameResult = true;
-		gameOver = true;
+	else {
+
+		// Check collision with spaceship
+		if (checkCollisionWithSpaceship()) {
+			gameResult = true;
+			gameOver = true;
+		}
+
+
+		if (checkIntersect(playerPos, alienGreenPos)) {
+			decrementHealth(10);
+		}
+
+		if (checkIntersect(playerPos, alienGrayPos)) {
+			decrementHealth(10);
+		}
+		
+
+		if (count == 100 && !gameOver && !starsFound) {
+			stars[0] = stars[1] = stars[2] = true;
+			gameOver = true;
+			gameResult = false;
+		}
+
+		//Alien game (Level 2)
+		bool f = true;
+		for (int i = 0; i < 3 && !gameOver; i++) {
+			if (stars[i] == false && checkIntersect(playerPos, starsPos[i])) {
+				stars[i] = true;
+				score += 5;
+			}
+			if (!starsFound) {
+				f = f && stars[i];
+			}
+		}
+
+		if (!starsFound && f && !gameOver) {
+			starsFound = true;
+			//gameOver = true;
+			//gameResult = true;
+		}
+
 	}
-	// Check collision with spaceship
-	if (checkCollisionWithSpaceship()) {
-		gameResult = true;
-		gameOver = true;
-	}
+	
 
 	// Check if the time is up
 	if (count >= 90) {
@@ -1044,64 +1122,6 @@ void Timer(int value) {
 		gameOver = true;
 	}
 
-	//Alien game (Level 2)
-	bool f = true;
-	for (int i = 0; i < 3 && !gameOver; i++) {
-		if (stars[i] == false && checkIntersect(playerPos, starsPos[i])) {
-			stars[i] = true;
-			score += 5;
-		}
-		if (!starsFound) {
-			f = f && stars[i];
-		}
-	}
-
-	if (!starsFound && f && !gameOver) {
-		starsFound = true;
-		//gameOver = true;
-		//gameResult = true;
-	}
-
-	if (checkIntersect(playerPos, alienGreenPos)) {
-		decrementHealth(10);
-	}
-
-	if (checkIntersect(playerPos, alienGrayPos)) {
-		decrementHealth(10);
-	}
-
-
-	//Zombies game (Level 1)
-	if (count == 100 && !gameOver && !brainsFound) {
-		brains[0] = brains[1] = brains[2] = true;
-		gameOver = true;
-		gameResult = false;
-	}
-
-	bool f2 = true;
-	for (int i = 0; i < 3 && !gameOver; i++) {
-		if (brains[i] == false && checkIntersect(playerPos, brainsPos[i])) {
-			brains[i] = true;
-			score += 5;
-		}
-		if (!brainsFound) {
-			f = f && brains[i];
-		}
-	}
-
-	if (!brainsFound && f && !gameOver) {
-		brainsFound = true;
-		gameOver = true;
-		gameResult = true;
-	}
-
-	if (checkIntersect(playerPos, zombieMalePos)) {
-		decrementHealth(10);
-	}
-
-	if (checkIntersect(playerPos, zombieFemalePos)) {
-		decrementHealth(10);
-	}
 
 	glutPostRedisplay();
 	glutTimerFunc(1000, Timer, 0);
