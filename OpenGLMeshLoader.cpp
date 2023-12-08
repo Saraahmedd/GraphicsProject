@@ -868,8 +868,8 @@ void Timer(int value) {
 
 	if (!starsFound && f && !gameOver) {
 		starsFound = true;
-		gameOver = true;
-		gameResult = true;
+		//gameOver = true;
+		//gameResult = true;
 	}
 
 	if (checkIntersect(playerPos, alienGreenPos)) {
