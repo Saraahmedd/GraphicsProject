@@ -456,6 +456,52 @@ void drawTree() {
 	glPopMatrix();
 }
 
+// Function to draw the win screen
+void drawWinScreen() {
+	glColor3f(0.0, 1.0, 0.0);  // Green color
+	glRasterPos2f(WIDTH / 2 - 50, HEIGHT / 2 + 20);
+	const char* winText = "You Win!";
+	int winLength = strlen(winText);
+	for (int i = 0; i < winLength; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, winText[i]);
+	}
+}
+
+// Function to draw the lose screen
+void drawLoseScreen() {
+	glColor3f(1.0, 0.0, 0.0);  // Red color
+	glRasterPos2f(WIDTH / 2 - 70, HEIGHT / 2 + 20);
+	const char* loseText = "Game Over!";
+	int loseLength = strlen(loseText);
+	for (int i = 0; i < loseLength; i++) {
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, loseText[i]);
+	}
+}
+
+
+// Function to check collision between player and house from any side
+bool checkHouseCollision() {
+	float x1 = housePos[0] - 5;  // Adjust the collision bounds as needed
+	float x2 = housePos[0] + 5;
+	float z1 = housePos[2] - 5;
+	float z2 = housePos[2] + 5;
+
+	return (playerPos[0] >= x1 && playerPos[0] <= x2 && playerPos[2] >= z1 && playerPos[2] <= z2);
+}
+
+bool checkCollisionWithSpaceship() {
+	// Assuming the spaceship is a rectangular object
+	float spaceshipMinX = spaceshipPos[0] - 2;  // Adjust based on spaceship dimensions
+	float spaceshipMaxX = spaceshipPos[0] + 2;
+	float spaceshipMinZ = spaceshipPos[2] - 2;  // Adjust based on spaceship dimensions
+	float spaceshipMaxZ = spaceshipPos[2] + 2;
+
+	// Check if the player's position is within the spaceship boundaries
+	return (playerPos[0] >= spaceshipMinX && playerPos[0] <= spaceshipMaxX &&
+		playerPos[2] >= spaceshipMinZ && playerPos[2] <= spaceshipMaxZ);
+}
+ 
+
 //=======================================================================
 // Display Function
 //=======================================================================
@@ -492,6 +538,16 @@ void myDisplay(void)
 	drawPlayer();
 
 	//drawHazmat();
+
+	 // Draw the win or lose screen based on gameResult
+	if (gameOver) {
+		if (gameResult) {
+			drawWinScreen();
+		}
+		else {
+			drawLoseScreen();
+		}
+	}
 
 	//sky box
 	glPushMatrix();
@@ -781,6 +837,22 @@ void Timer(int value) {
 		gameOver = true;
 		gameResult = false;
 	}
+	// Check collision with the house
+	if (checkHouseCollision()) {
+		gameResult = true;
+		gameOver = true;
+	}
+	// Check collision with spaceship
+	if (checkCollisionWithSpaceship()) {
+		gameResult = true;
+		gameOver = true;
+	}
+
+	// Check if the time is up
+	if (count >= 90) {
+		gameResult = false;
+		gameOver = true;
+	}
 
 	//Alien game (Level 2)
 	bool f = true;
@@ -841,8 +913,9 @@ void Timer(int value) {
 		decrementHealth(10);
 	}
 
-	glutTimerFunc(1000, Timer, 0);
 	glutPostRedisplay();
+	glutTimerFunc(1000, Timer, 0);
+
 }
 
 //=======================================================================
