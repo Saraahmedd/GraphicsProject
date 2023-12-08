@@ -4,6 +4,7 @@
 #include <glut.h>
 #include <cmath> 
 #include <string>
+#include <vector>
 
 #define M_PI 3.14159265358979323846
 
@@ -20,6 +21,9 @@ GLdouble fovy = 45.0;
 GLdouble aspectRatio = (GLdouble)WIDTH / (GLdouble)HEIGHT;
 GLdouble zNear = 0.1;
 GLdouble zFar = 1000;
+
+int gameLevel = 1;
+
 
 
 class Vector
@@ -68,6 +72,7 @@ float alienGrayPos[3] = { 5, 3, 15 };
 float alienGreenPos[3] = { 5, 3, 20 };
 float spaceshipPos[3] = { 17, 1, 25 };
 float housePos[3] = { 40,0,10 };
+float shootingPosition[2] = {WIDTH / 2, HEIGHT/2};
 
 float starsPos[3][3] = { { 7, 1, 20 },
 						 { 6, 1, 15 },
@@ -456,12 +461,177 @@ void drawTree() {
 	glPopMatrix();
 }
 
+void drawCrosshair() {
+	glDisable(GL_LIGHTING);
+	glDisable(GL_TEXTURE_2D);
+	glDisable(GL_DEPTH_TEST); // Temporarily disable depth test
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glLineWidth(50.0f);
+
+	glBegin(GL_LINES);
+	glVertex2f(WIDTH / 2 - 10, HEIGHT / 2); // Horizontal line
+	glVertex2f(WIDTH / 2 + 10, HEIGHT / 2);
+
+	glVertex2f(WIDTH / 2, HEIGHT / 2 - 10); // Vertical line
+	glVertex2f(WIDTH / 2, HEIGHT / 2 + 10);
+	glEnd();
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_LIGHTING);
+	glEnable(GL_TEXTURE_2D);
+}
+
+
+//=======================================================================
+// Bullet Code 
+//=======================================================================
+
+
+bool maleZombieAlive = true;
+bool femaleZombieAlive = true;
+bool greenAlienAlive = true;
+bool grayAlienAlive = true;
+
+struct Bullet {
+	float posX, posY, posZ; // Position of the bullet
+	float velX, velY, velZ; // Velocity of the bullet
+	int cycle = 0;
+	int direction;  // 1 for right, 2 for left, 3 for front, 4 for back
+
+
+	bool operator==(const Bullet& other) const {
+		return (posX == other.posX && posY == other.posY && posZ == other.posZ &&
+			velX == other.velX && velY == other.velY && velZ == other.velZ);
+	}
+
+	Bullet(float x, float y, float z, float vx, float vy, float vz, int direction) : posX(x), posY(y), posZ(z), velX(vx), velY(vy), velZ(vz), cycle(0), direction(direction) {}
+};
+
+std::vector<Bullet> bullets; // Vector to store all the bullets
+
+void updateBullets(int value) {
+	// Update the position of each bullet in the vector
+	for (auto& bullet : bullets) {
+
+		float bulletPos[3] = { bullet.posX, bullet.posY, bullet.posZ };
+
+		//code to check if a zombie or alien died
+		if (gameLevel == 1) {
+			//check collisions with zombies
+
+			if (maleZombieAlive && checkIntersect(bulletPos, zombieMalePos)) {
+				score += 50;
+				maleZombieAlive = false;
+			}
+			if (femaleZombieAlive && checkIntersect(bulletPos, zombieFemalePos)) {
+				score += 50;
+					femaleZombieAlive = false;
+			}
+		}
+		else {
+			//check collisions with aliens
+
+			if (greenAlienAlive && checkIntersect(bulletPos, alienGreenPos)) {
+				score += 100;
+				greenAlienAlive = false;
+			}
+			if (grayAlienAlive && checkIntersect(bulletPos, alienGrayPos)) {
+				score += 100;
+				grayAlienAlive = false;
+			}
+		}
+
+
+
+		if(bullet.direction == 1)
+			bullet.posX += bullet.velX;
+		if(bullet.direction == 2)
+			bullet.posX -= bullet.velX;
+		if(bullet.direction == 3)
+			bullet.posZ += bullet.velY;
+		if(bullet.direction == 4)
+			bullet.posZ -= bullet.velY;
+
+		bullet.cycle++;
+
+		if (bullet.cycle == 10) {
+			// Find the iterator pointing to the specific bullet in the vector
+			auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+			// Check if the bullet was found
+			if (it != bullets.end()) {
+				// Erase the bullet from the vector
+				bullets.erase(it);
+			}
+		}
+
+	}
+
+	glutPostRedisplay();
+
+	// Schedule the next update after 0.5 seconds (500 milliseconds)
+	glutTimerFunc(500, updateBullets, 0);
+}
+
+void drawBullet(float posX, float posY, float posZ) {
+
+	int bulletsize = 0.1;
+
+	glPushMatrix();
+	glColor3f(1.0f, 0.0f, 0.0f); // Red color for bullets (you can change the color)
+	glTranslatef(posX, posY, posZ); // Translate to the bullet's position
+	glutSolidSphere(0.2, 10, 10); // Draw a small sphere as a bullet
+	glPopMatrix();
+}
+
+void fireBullet() {
+
+	int bulletPosx;
+	int bulletPosy;
+	int bulletPosz;
+
+	if (cameraMode == 1) {
+		//shoot front from the middle of the screen 
+		bulletPosx = Eye.x;
+		bulletPosy = Eye.y;
+		bulletPosz = Eye.z;
+		
+	}
+	else {
+
+
+		bulletPosx = playerPos[0];
+		bulletPosy = playerPos[1] + 3.0f;
+		bulletPosz = playerPos[2];
+
+	}
+
+	int bulletDirection;
+	if (playerRot == 0.0f)
+		bulletDirection = 3;
+	else if (playerRot == 180.0f)
+		bulletDirection = 4;
+	else if (playerRot == 90.0)
+		bulletDirection = 1;
+	else
+		bulletDirection = 2;
+
+
+	bullets.emplace_back(bulletPosx, bulletPosy, bulletPosz, 1.0f, 1.0f, 1.0f, bulletDirection);
+
+}
+
+
+
+
 //=======================================================================
 // Display Function
 //=======================================================================
 void myDisplay(void)
 {
+
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 
 	GLfloat lightIntensity[] = { 0.7, 0.7, 0.7, 1.0f };
 	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
@@ -477,13 +647,21 @@ void myDisplay(void)
 
 	drawBrain();
 
-	drawZombieMale();
+	if (maleZombieAlive) {
+		drawZombieMale();
+	}
 	
-	drawZombieFemale();
+	if (femaleZombieAlive) {
+		drawZombieFemale();
+	}
 	
-	drawAlienGray();
+	if (grayAlienAlive) {
+		drawAlienGray();
+	}
 	
-	drawAlienGreen();
+	if (greenAlienAlive) {
+		drawAlienGreen();
+	}
 	
 	drawStar();
 
@@ -492,6 +670,8 @@ void myDisplay(void)
 	drawPlayer();
 
 	//drawHazmat();
+
+	
 
 	//sky box
 	glPushMatrix();
@@ -510,6 +690,13 @@ void myDisplay(void)
 	glPopMatrix();
 
 	DrawHealthBar();
+
+
+	drawCrosshair();
+
+	for (const auto& bullet : bullets) {
+		drawBullet(bullet.posX, bullet.posY, bullet.posZ);
+	}
 
 	glutSwapBuffers();
 }
@@ -597,6 +784,9 @@ void myKeyboard(unsigned char button, int x, int y)
 		break;
 	case 27: // ESC key
 		exit(0);
+		break;
+	case 32:
+		fireBullet();
 		break;
 
 	default:
@@ -872,6 +1062,8 @@ void main(int argc, char** argv)
 
 	glutReshapeFunc(myReshape);
 
+
+	glutTimerFunc(500, updateBullets, 0);
 	myInit();
 
 	LoadAssets();
