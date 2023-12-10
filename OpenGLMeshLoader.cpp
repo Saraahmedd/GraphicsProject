@@ -1117,6 +1117,11 @@ void decrementHealth(int damage) { // 0-100 damage
 		gameOver = true;
 		gameResult = false;
 	}
+	if (playerHealth <= maxHealth / 2) {
+		lightIntensity[0] -= 0.02;
+		lightIntensity[1] -= 0.02;
+		lightIntensity[2] -= 0.02;
+	}
 }
 
 void incrementHealth(int heal) {
@@ -1133,12 +1138,12 @@ void Timer(int value) {
 
 	if (gameLevel == 1) {
 		// Set light color to greenish for level 1
-		GLfloat greenishLight[] = { 0.0, 1.0, 0.0, 1.0 };
+		GLfloat greenishLight[] = { 0.1, 0.5, 0.1, 1.0 };
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, greenishLight);
 	}
 	else if (gameLevel == 2) {
 		// Set light color to purple-ish for level 2
-		GLfloat purpleishLight[] = { 0.5, 0.0, 0.5, 1.0 };
+		GLfloat purpleishLight[] = { 0.5, 0.0, 0.6, 1.0 };
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, purpleishLight);
 	}
 
