@@ -5,6 +5,11 @@
 #include <cmath> 
 #include <string>
 #include <vector>
+#include <playsoundapi.h>
+#include <thread>
+#include <chrono>
+
+
 
 #define M_PI 3.14159265358979323846
 
@@ -83,11 +88,13 @@ float brainsPos[3][3] = { { 13,2,10 },
 						 { 13,2,15 } };
 
 //controls
-int level = 1, score = 0, cameraMode = 3 ;
+int score = 0, cameraMode = 3 ;
 float playerHealth = 100.0, maxHealth = 100.0; // Full health
 bool stars[3] = { false,false,false };
 bool brains[3] = { false,false,false };
 bool gameOver, gameResult, starsFound, brainsFound;
+bool gameOverSoundPlayed = false;
+
 
 //=======================================================================
 // Lighting Configuration Function
@@ -240,13 +247,8 @@ void drawPlayer() {
 }
 
 void drawZombieMale() {
-	//zombie-male model
 
 	tex_zombieMale.Use();
-	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[1]);
-	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[2]);
-	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[3]);
-	//glBindTexture(GL_TEXTURE_2D, tex_zombieMale.texture[4]);
 
 	glPushMatrix();
 	glTranslatef(zombieMalePos[0], zombieMalePos[1], zombieMalePos[2]);
@@ -420,7 +422,7 @@ void DrawHealthBar() {
 
 	glRasterPos2f(xPos1, yPos1);
 	const char* text1 = "Level: ";
-	std::string fullText1 = text1 + std::to_string(level);
+	std::string fullText1 = text1 + std::to_string(gameLevel);
 	const char* displayText1 = fullText1.c_str();
 	int length1 = strlen(displayText1);
 	for (int i = 0; i < length1; i++) {
@@ -498,7 +500,6 @@ struct Bullet {
 	int cycle = 0;
 	int direction;  // 1 for right, 2 for left, 3 for front, 4 for back
 
-
 	bool operator==(const Bullet& other) const {
 		return (posX == other.posX && posY == other.posY && posZ == other.posZ &&
 			velX == other.velX && velY == other.velY && velZ == other.velZ);
@@ -522,10 +523,17 @@ void updateBullets(int value) {
 			if (maleZombieAlive && checkIntersect(bulletPos, zombieMalePos)) {
 				score += 50;
 				maleZombieAlive = false;
+				sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+
 			}
 			if (femaleZombieAlive && checkIntersect(bulletPos, zombieFemalePos)) {
 				score += 50;
-					femaleZombieAlive = false;
+				femaleZombieAlive = false;
+				sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 			}
 		}
 		else {
@@ -534,10 +542,16 @@ void updateBullets(int value) {
 			if (greenAlienAlive && checkIntersect(bulletPos, alienGreenPos)) {
 				score += 100;
 				greenAlienAlive = false;
+				sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 			}
 			if (grayAlienAlive && checkIntersect(bulletPos, alienGrayPos)) {
 				score += 100;
 				grayAlienAlive = false;
+				sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
+				std::this_thread::sleep_for(std::chrono::seconds(3));
+				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 			}
 		}
 
@@ -644,13 +658,15 @@ void fireBullet() {
 		
 	}
 	else {
-
-
 		bulletPosx = playerPos[0];
 		bulletPosy = playerPos[1] + 3.0f;
 		bulletPosz = playerPos[2];
 
 	}
+
+	sndPlaySound(TEXT("sounds/shoot.wav"), SND_FILENAME | SND_ASYNC);
+	std::this_thread::sleep_for(std::chrono::seconds(2));
+	sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 
 	int bulletDirection;
 	if (playerRot == 0.0f)
@@ -664,7 +680,6 @@ void fireBullet() {
 
 
 	bullets.emplace_back(bulletPosx, bulletPosy, bulletPosz, 1.0f, 1.0f, 1.0f, bulletDirection);
-
 }
 
 
@@ -679,7 +694,7 @@ void myDisplay(void)
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 
-	GLfloat lightIntensity[] = { 0.7, 0.7, 0.7, 1.0f };
+	GLfloat lightIntensity[] = { 0.5, 0.5, 0.5, 1.0f };
 	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
@@ -760,6 +775,56 @@ void myDisplay(void)
 
 	glutSwapBuffers();
 }
+
+
+//=======================================================================
+// Mouse Function
+//=======================================================================
+void myMouse(int button, int state, int x, int y)
+{
+	const GLdouble radiansPerDegree = M_PI / 180.0; // Convert degrees to radians
+
+	if (state == GLUT_DOWN)
+	{
+		if (button == GLUT_LEFT_BUTTON)
+		{
+			cameraMode = 1;
+			Eye.x = playerPos[0] + cos(playerRot * M_PI / 180.0);
+			Eye.y = playerPos[1] + 5;
+			Eye.z = playerPos[2] + sin(playerRot * M_PI / 180.0);
+		}
+		else if (button == GLUT_RIGHT_BUTTON)
+		{
+			// Change to camera mode 3
+			cameraMode = 3;
+			Eye.x = 10;
+			Eye.y = 10;
+			Eye.z = 40;
+		}
+
+		if (cameraMode == 1) {
+			// Update the Eye position to be at the player's position
+			Eye.x = playerPos[0];
+			Eye.y = playerPos[1] + 5; // Adjust height if needed
+			Eye.z = playerPos[2];
+
+			// Calculate the direction the player is looking
+			GLdouble lookX = sin(playerRot * radiansPerDegree);
+			GLdouble lookZ = cos(playerRot * radiansPerDegree);
+
+			// Update the At vector to be in the direction the player is facing
+			At.x = Eye.x + lookX;
+			At.y = Eye.y;
+			At.z = Eye.z + lookZ;
+		}
+
+		// Update camera view
+		glLoadIdentity();
+		gluLookAt(Eye.x, Eye.y, Eye.z, At.x, At.y, At.z, Up.x, Up.y, Up.z);
+		glutPostRedisplay();
+	}
+}
+
 
 void myKeyboard(unsigned char button, int x, int y)
 {
@@ -935,18 +1000,6 @@ void mySpecialKeys(int key, int x, int y)
 	glutPostRedisplay();
 }
 
-//=======================================================================
-// Mouse Function
-//=======================================================================
-void myMouse(int button, int state, int x, int y)
-{
-	y = HEIGHT - y;
-
-	if (state == GLUT_DOWN)
-	{
-		cameraZoom = y;
-	}
-}
 
 //=======================================================================
 // Reshape Function
@@ -1006,6 +1059,9 @@ void LoadAssets()
 void decrementHealth(int damage) { // 0-100 damage
 	if (playerHealth >= damage) {
 		playerHealth -= damage;
+		sndPlaySound(TEXT("sounds/playerDamage.wav"), SND_FILENAME | SND_ASYNC);
+		std::this_thread::sleep_for(std::chrono::seconds(1));
+		sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 	}
 	else {
 		playerHealth = 0;
@@ -1046,7 +1102,7 @@ void Timer(int value) {
 
 
 		//Zombies game (Level 1)
-		if (count == 100 && !gameOver && !brainsFound) {
+		if (count == 100 && !gameOver ) {
 			brains[0] = brains[1] = brains[2] = true;
 			gameOver = true;
 			gameResult = false;
@@ -1058,6 +1114,9 @@ void Timer(int value) {
 			if (brains[i] == false && checkIntersect(playerPos, brainsPos[i])) {
 				brains[i] = true;
 				score += 5;
+				sndPlaySound(TEXT("sounds/collect.wav"), SND_FILENAME | SND_ASYNC);
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 			}
 			if (!brainsFound) {
 				f = f && brains[i];
@@ -1066,8 +1125,6 @@ void Timer(int value) {
 
 		if (!brainsFound && f && !gameOver) {
 			brainsFound = true;
-			gameOver = true;
-			gameResult = true;
 		}
 
 	}
@@ -1089,7 +1146,7 @@ void Timer(int value) {
 		}
 		
 
-		if (count == 100 && !gameOver && !starsFound) {
+		if (count == 100 && !gameOver ) {
 			stars[0] = stars[1] = stars[2] = true;
 			gameOver = true;
 			gameResult = false;
@@ -1101,6 +1158,9 @@ void Timer(int value) {
 			if (stars[i] == false && checkIntersect(playerPos, starsPos[i])) {
 				stars[i] = true;
 				score += 5;
+				sndPlaySound(TEXT("sounds/collect.wav"), SND_FILENAME | SND_ASYNC);
+				std::this_thread::sleep_for(std::chrono::seconds(2));
+				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 			}
 			if (!starsFound) {
 				f = f && stars[i];
@@ -1109,8 +1169,6 @@ void Timer(int value) {
 
 		if (!starsFound && f && !gameOver) {
 			starsFound = true;
-			//gameOver = true;
-			//gameResult = true;
 		}
 
 	}
@@ -1122,6 +1180,16 @@ void Timer(int value) {
 		gameOver = true;
 	}
 
+	if (gameOver && !gameOverSoundPlayed) {
+		if (gameResult) {
+			sndPlaySound(TEXT("sounds/surviveWin.wav"), SND_FILENAME | SND_ASYNC);
+			gameOverSoundPlayed = true;
+		}
+		else {
+			sndPlaySound(TEXT("sounds/gameOver.wav"), SND_FILENAME | SND_ASYNC);
+			gameOverSoundPlayed = true;
+		}
+	}
 
 	glutPostRedisplay();
 	glutTimerFunc(1000, Timer, 0);
@@ -1168,6 +1236,8 @@ void main(int argc, char** argv)
 
 	glutTimerFunc(0, Timer, 0);
 	glShadeModel(GL_SMOOTH);
+
+	sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 
 	glutMainLoop();
 }
