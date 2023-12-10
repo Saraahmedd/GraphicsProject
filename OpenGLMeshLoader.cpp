@@ -1043,17 +1043,12 @@ void LoadAssets()
 	model_alienGreen.Load("Models/Alien-green/K0Y3926GODW8EXPFE835EUWG7.3ds");
 	model_star.Load("Models/Star/5ebea14b8ef94f57b1f37ac18211f70e.3ds");
 	model_spaceship.Load("Models/Spaceship/IPFJ80NKQ01QATOPYPW2HQKAD.3ds");
-	//model_hazmat.Load("Models/Hazmat/IPFJ80NKQ01QATOPYPW2HQKAD.3ds");
 	
 
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
 	tex_zombieMale.Load("models/Zombie-male/t0045_0.bmp");
-	//tex_zombieMale.Load("Models/Zombie-male/t0045_2.bmp");
-	//tex_zombieMale.Load("Models/Zombie-male/t0046_1.bmp");
-	//tex_zombieMale.Load("Models/Zombie-male/t0047_0.bmp");
-	//tex_zombieMale.Load("Models/Zombie-male/t0071_1.bmp");
 }
 
 void decrementHealth(int damage) { // 0-100 damage
