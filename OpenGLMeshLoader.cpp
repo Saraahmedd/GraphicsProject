@@ -95,6 +95,14 @@ bool brains[3] = { false,false,false };
 bool gameOver, gameResult, starsFound, brainsFound;
 bool gameOverSoundPlayed = false;
 
+GLfloat lightIntensity[] = { 0.2, 0.2, 0.2, 1.0f };
+GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
+
+GLfloat playerLightIntensity[] = { 0.7, 0.7, 0.7, 1.0f }; // Adjust as needed
+GLfloat playerLightPosition[] = { playerPos[0], playerPos[1] + 2.0, playerPos[2], 1.0f }; // Positioned above the player
+GLfloat spotDirection[] = { 0.0, -1.0, 0.0 }; // Spotlight direction (downwards)
+
+
 
 //=======================================================================
 // Lighting Configuration Function
@@ -152,6 +160,21 @@ bool checkIntersect(float playerPostions[], float balloon[]) {
 	return (balloon[0] >= x1 && balloon[0] <= x2 && balloon[2] >= z1 && balloon[2] <= z2);
 }
 
+void InitPlayerLight() {
+
+	glEnable(GL_LIGHTING);
+	glEnable(GL_LIGHT1);
+
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, playerLightIntensity);
+	glLightfv(GL_LIGHT1, GL_POSITION, playerLightPosition);
+
+	glLightf(GL_LIGHT1, GL_SPOT_CUTOFF, 45.0); // Set the cutoff angle
+	glLightfv(GL_LIGHT1, GL_SPOT_DIRECTION, spotDirection);
+	glLightf(GL_LIGHT1, GL_SPOT_EXPONENT, 5.0); // Set the focus of the spotlight
+}
+
+
+
 //=======================================================================
 // OpengGL Configuration Function
 //=======================================================================
@@ -185,6 +208,8 @@ void myInit(void)
 
 	InitMaterial();
 
+	InitPlayerLight();
+
 	glEnable(GL_DEPTH_TEST);
 
 	glEnable(GL_NORMALIZE);
@@ -195,8 +220,6 @@ void myInit(void)
 //=======================================================================
 void RenderGround()
 {
-	glDisable(GL_LIGHTING);	// Disable lighting 
-
 	glColor3f(0.6, 0.6, 0.6);	// Dim the ground texture a bit
 
 	glEnable(GL_TEXTURE_2D);	// Enable 2D texturing
@@ -215,8 +238,6 @@ void RenderGround()
 	glVertex3f(-200, 0, 200);
 	glEnd();
 	glPopMatrix();
-
-	glEnable(GL_LIGHTING);	// Enable lighting again for other entites coming throung the pipeline.
 
 	glColor3f(1, 1, 1);	// Set material back to white instead of grey used for the ground texture.
 }
@@ -365,6 +386,7 @@ void drawHouse() {
 	// Draw house Model
 	glPushMatrix();
 	glTranslatef(housePos[0], housePos[1], housePos[2]);
+	glScalef(3,3,3);
 	glRotatef(90.f, 1, 0, 0);
 	model_house.Draw();
 	glPopMatrix();
@@ -683,19 +705,13 @@ void fireBullet() {
 }
 
 
-
-
 //=======================================================================
 // Display Function
 //=======================================================================
-void myDisplay(void)
-{
+void myDisplay(void){
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-
-	GLfloat lightIntensity[] = { 0.5, 0.5, 0.5, 1.0f };
-	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
 
@@ -732,6 +748,13 @@ void myDisplay(void)
 		drawSpaceship();
 	}
 
+	playerLightPosition[0] = playerPos[0];
+	playerLightPosition[1] = playerPos[1] + 2.0;
+	playerLightPosition[2] = playerPos[2];
+	playerLightPosition[3] = 1.0f; // Positioned above the player
+	glLightfv(GL_LIGHT1, GL_POSITION, playerLightPosition);
+
+
 	drawPlayer();
 
 	//drawHazmat();
@@ -751,6 +774,8 @@ void myDisplay(void)
 	//sky box
 	glPushMatrix();
 
+	glClearColor(0.3f, 0.1f, 0.1f, 1.0f);
+
 	GLUquadricObj* qobj;
 	qobj = gluNewQuadric();
 	glTranslated(50, 0, 0);
@@ -760,7 +785,6 @@ void myDisplay(void)
 	gluQuadricNormals(qobj, GL_SMOOTH);
 	gluSphere(qobj, 100, 100, 100);
 	gluDeleteQuadric(qobj);
-
 
 	glPopMatrix();
 
@@ -1184,6 +1208,16 @@ void Timer(int value) {
 			sndPlaySound(TEXT("sounds/gameOver.wav"), SND_FILENAME | SND_ASYNC);
 			gameOverSoundPlayed = true;
 		}
+	}
+
+	lightIntensity[0] -= 0.01;
+	lightIntensity[1] -= 0.01;
+	lightIntensity[2] -= 0.01;
+
+	if (count == 0) {
+		lightIntensity[0] = 0.4;
+		lightIntensity[1] = 0.4;
+		lightIntensity[2] = 0.4;
 	}
 
 	glutPostRedisplay();
