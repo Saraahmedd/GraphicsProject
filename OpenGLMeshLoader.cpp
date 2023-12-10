@@ -88,12 +88,16 @@ float brainsPos[3][3] = { { 13,2,10 },
 						 { 13,2,15 } };
 
 //controls
-int score = 0, cameraMode = 3 ;
+int score = 0, cameraMode = 2 ;
 float playerHealth = 100.0, maxHealth = 100.0; // Full health
 bool stars[3] = { false,false,false };
 bool brains[3] = { false,false,false };
 bool gameOver, gameResult, starsFound, brainsFound;
 bool gameOverSoundPlayed = false;
+bool isJumping = false;
+float jumpVelocity = 0.0f;
+float gravity = 0.98f; // adjust as needed
+
 
 GLfloat lightIntensity[] = { 0.2, 0.2, 0.2, 1.0f };
 GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
@@ -475,16 +479,6 @@ void DrawHealthBar() {
 }
 
 
-
-void drawTree() {
-	// Draw Tree Model
-	glPushMatrix();
-	glTranslatef(10, 0, 0);
-	glScalef(0.7, 0.7, 0.7);
-	model_tree.Draw();
-	glPopMatrix();
-}
-
 void drawCrosshair() {
 	glDisable(GL_LIGHTING);
 	glDisable(GL_TEXTURE_2D);
@@ -718,7 +712,6 @@ void myDisplay(void){
 	// Draw Ground
 	RenderGround();
 
-	drawTree();
 
 	if (gameLevel == 1) {
 		drawHouse();
@@ -821,10 +814,15 @@ void myMouse(int button, int state, int x, int y)
 		{
 			// Change to camera mode 3
 			cameraMode = 3;
-			Eye.x = 10;
-			Eye.y = 10;
-			Eye.z = 40;
+			Eye.x = playerPos[0] + cos(playerRot * M_PI / 180.0);
+			Eye.y = playerPos[1] + 8;
+			Eye.z = playerPos[2] + sin(playerRot * M_PI / 180.0) - 10;
+			
 		}
+
+		// Calculate the direction the player is looking
+		GLdouble lookX = sin(playerRot * radiansPerDegree);
+		GLdouble lookZ = cos(playerRot * radiansPerDegree);
 
 		if (cameraMode == 1) {
 			// Update the Eye position to be at the player's position
@@ -832,11 +830,20 @@ void myMouse(int button, int state, int x, int y)
 			Eye.y = playerPos[1] + 5; // Adjust height if needed
 			Eye.z = playerPos[2];
 
-			// Calculate the direction the player is looking
-			GLdouble lookX = sin(playerRot * radiansPerDegree);
-			GLdouble lookZ = cos(playerRot * radiansPerDegree);
-
 			// Update the At vector to be in the direction the player is facing
+			At.x = Eye.x + lookX;
+			At.y = Eye.y;
+			At.z = Eye.z + lookZ;
+		}
+
+		if (cameraMode == 3) {
+
+			Eye.x = playerPos[0] - lookX * 10; // Adjust the multiplier for distance behind player
+			Eye.y = playerPos[1] + 5; // Height offset
+			Eye.z = playerPos[2] - lookZ * 10; // Adjust the multiplier for distance behind player
+
+			// For camera mode 3, update the Eye position to stay behind the player's head
+
 			At.x = Eye.x + lookX;
 			At.y = Eye.y;
 			At.z = Eye.z + lookZ;
@@ -925,16 +932,28 @@ void myKeyboard(unsigned char button, int x, int y)
 		Eye.y = playerPos[1] + 5;
 		Eye.z = playerPos[2] + sin(playerRot * M_PI / 180.0);
 		break;
-	case '3':
-		cameraMode = 3;
+	case '2':
+		cameraMode = 2;
 		Eye.x = 10;
 		Eye.y = 10;
 		Eye.z = 40;
 		break;
+	case '3':
+		cameraMode = 3;
+		Eye.x = playerPos[0] + cos(playerRot * M_PI / 180.0);
+		Eye.y = playerPos[1] + 8;
+		Eye.z = playerPos[2] + sin(playerRot * M_PI / 180.0)-10;
+		break;
 	case 27: // ESC key
 		exit(0);
 		break;
-	case 32:
+	case 32: // ASCII code for Spacebar
+		if (!isJumping) {
+			isJumping = true;
+			jumpVelocity = 1.0f; // initial jump velocity, adjust as needed
+		}
+		break;
+	case 13: // ASCII code for Enter Key
 		fireBullet();
 		break;
 
@@ -942,17 +961,28 @@ void myKeyboard(unsigned char button, int x, int y)
 		break;
 	}
 
+	GLdouble lookX = sin(playerRot * radiansPerDegree);
+	GLdouble lookZ = cos(playerRot * radiansPerDegree);
+
 	if (cameraMode == 1) {
 		// Update the Eye position to be at the player's position
 		Eye.x = playerPos[0];
 		Eye.y = playerPos[1] + 5; // Adjust height if needed
 		Eye.z = playerPos[2];
 
-		// Calculate the direction the player is looking
-		GLdouble lookX = sin(playerRot * radiansPerDegree);
-		GLdouble lookZ = cos(playerRot * radiansPerDegree);
-
 		// Update the At vector to be in the direction the player is facing
+		At.x = Eye.x + lookX;
+		At.y = Eye.y;
+		At.z = Eye.z + lookZ;
+	}
+
+	if (cameraMode == 3) {
+		Eye.x = playerPos[0] - lookX * 10; // Adjust the multiplier for distance behind player
+		Eye.y = playerPos[1] + 5; // Height offset
+		Eye.z = playerPos[2] - lookZ * 10; // Adjust the multiplier for distance behind player
+
+		// For camera mode 3, update the Eye position to stay behind the player's head
+
 		At.x = Eye.x + lookX;
 		At.y = Eye.y;
 		At.z = Eye.z + lookZ;
@@ -1101,6 +1131,16 @@ void incrementHealth(int heal) {
 void Timer(int value) {
 	count++;
 
+	if (gameLevel == 1) {
+		// Set light color to greenish for level 1
+		GLfloat greenishLight[] = { 0.0, 1.0, 0.0, 1.0 };
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, greenishLight);
+	}
+	else if (gameLevel == 2) {
+		// Set light color to purple-ish for level 2
+		GLfloat purpleishLight[] = { 0.5, 0.0, 0.5, 1.0 };
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, purpleishLight);
+	}
 
 	if (gameLevel == 1) {
 
@@ -1210,6 +1250,17 @@ void Timer(int value) {
 		}
 	}
 
+	if (isJumping) {
+		playerPos[1] += jumpVelocity; // Update player's Y position
+		jumpVelocity -= gravity; // Apply gravity
+
+		// Check for landing
+		if (playerPos[1] <= 0.0f) {
+			playerPos[1] = 0.0f; // Reset to ground level
+			isJumping = false;
+		}
+	}
+
 	lightIntensity[0] -= 0.01;
 	lightIntensity[1] -= 0.01;
 	lightIntensity[2] -= 0.01;
@@ -1219,6 +1270,7 @@ void Timer(int value) {
 		lightIntensity[1] = 0.4;
 		lightIntensity[2] = 0.4;
 	}
+
 
 	glutPostRedisplay();
 	glutTimerFunc(1000, Timer, 0);
