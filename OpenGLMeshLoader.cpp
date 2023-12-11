@@ -71,7 +71,7 @@ GLTexture tex_zombieMale;
 
 //model positions
 float playerPos[3] = { 7, 0, 10 }; int playerRot = 0.0;
-float zombieMalePos[3] = { 15, 3, 15 };
+float zombieMalePos[3] = { 15, 4, 15 };
 float zombieFemalePos[3] = { 15, 3, 10 };
 float alienGrayPos[3] = { 5, 3, 15 };
 float alienGreenPos[3] = { 5, 3, 20 };
@@ -277,7 +277,7 @@ void drawZombieMale() {
 
 	glPushMatrix();
 	glTranslatef(zombieMalePos[0], zombieMalePos[1], zombieMalePos[2]);
-	glScalef(2.4, 2.4, 2.4);
+	glScalef(0.15, 0.15, 0.15);
 	glRotatef(90.f, 1, 0, 0);
 	model_zombieMale.Draw();
 
@@ -287,9 +287,7 @@ void drawZombieMale() {
 }
 
 void drawZombieFemale() {
-	//zombie-female model
 
-	tex_zombieMale.Use();
 
 	glPushMatrix();
 	glTranslatef(zombieFemalePos[0], zombieFemalePos[1], zombieFemalePos[2]);
@@ -616,6 +614,8 @@ void drawBullet(float posX, float posY, float posZ) {
 
 // Function to draw the win screen
 void drawWinScreen() {
+	GLfloat diffuse[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glColor3f(0.0, 1.0, 0.0);  // Green color
 	glRasterPos2f(WIDTH / 2 - 50, HEIGHT / 2 + 20);
 	const char* winText = "You Win!";
@@ -627,6 +627,8 @@ void drawWinScreen() {
 
 // Function to draw the lose screen
 void drawLoseScreen() {
+	GLfloat diffuse[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	glColor3f(1.0, 0.0, 0.0);  // Red color
 	glRasterPos2f(WIDTH / 2 - 70, HEIGHT / 2 + 20);
 	const char* loseText = "Game Over!";
@@ -1090,7 +1092,7 @@ void LoadAssets()
 	model_house.Load("Models/house/house.3DS");
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_brain.Load("Models/brain/brain.3ds");
-	model_zombieMale.Load("Models/Zombie-male/W6VXUFDDZEWHLDMF1TDFEHLSQ.3ds");
+	model_zombieMale.Load("Models/Zombie-male/zombieMale.3ds");
 	model_zombieMale2.Load("Models/Player/sci_fi5.3ds");
 	model_zombieFemale.Load("Models/Zombie-female/YX7E6SXK5QENDHI2C2SDRHFV9.3ds");
 	model_alienGray.Load("Models/Alien-gray/RHF0I8IA4NR339RPGEX2E5UU4.3ds");
@@ -1102,7 +1104,7 @@ void LoadAssets()
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
-	tex_zombieMale.Load("models/Zombie-male/t0045_0.bmp");
+	tex_zombieMale.Load("models/Zombie-male/t0046_1.bmp");
 }
 
 void decrementHealth(int damage) { // 0-100 damage
