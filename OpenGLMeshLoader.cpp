@@ -29,6 +29,11 @@ GLdouble zFar = 1000;
 
 int gameLevel = 1;
 
+int maleZombiehits = 0;
+int femaleZombiehits = 0;
+int greenAlienHits = 0;
+int grayAlienHits = 0;
+
 
 
 class Vector
@@ -537,18 +542,50 @@ void updateBullets(int value) {
 
 			if (maleZombieAlive && checkIntersect(bulletPos, zombieMalePos)) {
 				score += 50;
-				maleZombieAlive = false;
-				sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
-				std::this_thread::sleep_for(std::chrono::seconds(2));
-				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				maleZombiehits++;
+				if (maleZombiehits == 2) {
+					maleZombieAlive = false;
+					sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
+					std::this_thread::sleep_for(std::chrono::seconds(2));
+					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				}
+				else {
+					for (int i = 0; i < 3; ++i) {
+						if (i % 2 == 0) {
+							if (zombieMalePos[i] > playerPos[i]) {
+								zombieMalePos[i] += 0.3f;
+							}
+							else {
+								zombieMalePos[i] -= 0.3f;
+							}
+							
+						}
+					}
+				}
 
 			}
 			if (femaleZombieAlive && checkIntersect(bulletPos, zombieFemalePos)) {
 				score += 50;
-				femaleZombieAlive = false;
-				sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
-				std::this_thread::sleep_for(std::chrono::seconds(2));
-				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				femaleZombiehits++;
+				if (femaleZombiehits == 2) {
+					femaleZombieAlive = false;
+					sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
+					std::this_thread::sleep_for(std::chrono::seconds(2));
+					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				}
+				else {
+					for (int i = 0; i < 3; ++i) {
+						if (i % 2 == 0) {
+							if (zombieFemalePos[i] > playerPos[i]) {
+								zombieFemalePos[i] += 0.3f;
+							}
+							else {
+								zombieFemalePos[i] -= 0.3f;
+							}
+
+						}
+					}
+				}
 			}
 		}
 		else {
@@ -556,17 +593,51 @@ void updateBullets(int value) {
 
 			if (greenAlienAlive && checkIntersect(bulletPos, alienGreenPos)) {
 				score += 100;
-				greenAlienAlive = false;
-				sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
-				std::this_thread::sleep_for(std::chrono::seconds(3));
-				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				greenAlienHits++;
+				if (greenAlienHits == 2) {
+					greenAlienAlive = false;
+					sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				}
+				else {
+					for (int i = 0; i < 3; ++i) {
+						if (i % 2 == 0) {
+							if (alienGreenPos[i] > playerPos[i]) {
+								alienGreenPos[i] += 0.3f;
+							}
+							else {
+								alienGreenPos[i] -= 0.3f;
+							}
+
+						}
+					}
+
+				}
 			}
 			if (grayAlienAlive && checkIntersect(bulletPos, alienGrayPos)) {
 				score += 100;
-				grayAlienAlive = false;
-				sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
-				std::this_thread::sleep_for(std::chrono::seconds(3));
-				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				grayAlienHits++;
+				if (grayAlienHits == 2) {
+					grayAlienAlive = false;
+					sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
+					std::this_thread::sleep_for(std::chrono::seconds(3));
+					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+				}
+				else {
+					for (int i = 0; i < 3; ++i) {
+						if (i % 2 == 0) {
+							if (alienGrayPos[i] > playerPos[i]) {
+								alienGrayPos[i] += 0.3f;
+							}
+							else {
+								alienGrayPos[i] -= 0.3f;
+							}
+
+						}
+					}
+
+				}
 			}
 		}
 
@@ -1027,6 +1098,60 @@ void myMotion(int x, int y)
 	glutPostRedisplay();	//Re-draw scene 
 }
 
+
+
+//===============================================
+//Enemies movement
+//==============================================
+
+
+
+void moveEnemies() {
+
+	if (gameLevel == 1) {
+		// Move zombies towards the player
+		float zombieMovement = 0.2f;
+		for (int i = 0; i < 3; ++i) {
+			if (i % 2 == 0) {
+				if (zombieMalePos[i] > playerPos[i]) {
+					zombieMalePos[i] -= zombieMovement;
+				}
+				else {
+					zombieMalePos[i] += zombieMovement;
+				}
+				if (zombieFemalePos[i] > playerPos[i]) {
+					zombieFemalePos[i] -= zombieMovement;
+				}
+				else {
+					zombieFemalePos[i] += zombieMovement;
+				}
+			}
+		}
+	}
+	else if (gameLevel == 2) {
+		// Move aliens towards the player
+		float alienMovement = 0.3f;
+		for (int i = 0; i < 3; ++i) {
+			if (i % 2 == 0) {
+				if (alienGrayPos[i] > playerPos[i]) {
+					alienGrayPos[i] -= alienMovement;
+				}
+				else {
+					alienGrayPos[i] += alienMovement;
+				}
+				if (alienGreenPos[i] > playerPos[i]) {
+					alienGreenPos[i] -= alienMovement;
+				}
+				else {
+					alienGreenPos[i] += alienMovement;
+				}
+			}
+		}
+	}
+
+}
+
+
 //=======================================================================
 // Special Keys Function
 //=======================================================================
@@ -1141,6 +1266,8 @@ void incrementHealth(int heal) {
 void Timer(int value) {
 	count++;
 
+	moveEnemies();
+
 	if (gameLevel == 1) {
 		// Set light color to greenish for level 1
 		GLfloat greenishLight[] = { 0.1, 0.5, 0.1, 1.0 };
@@ -1161,11 +1288,11 @@ void Timer(int value) {
 			tex_ground.Load("Textures/moon.bmp");
 		}
 
-		if (checkIntersect(playerPos, zombieMalePos)) {
+		if ( maleZombieAlive &&  checkIntersect(playerPos, zombieMalePos)) {
 			decrementHealth(10);
 		}
 
-		if (checkIntersect(playerPos, zombieFemalePos)) {
+		if ( femaleZombieAlive &&  checkIntersect(playerPos, zombieFemalePos)) {
 			decrementHealth(10);
 		}
 
@@ -1207,11 +1334,11 @@ void Timer(int value) {
 		}
 
 
-		if (checkIntersect(playerPos, alienGreenPos)) {
+		if ( greenAlienAlive&&  checkIntersect(playerPos, alienGreenPos)) {
 			decrementHealth(10);
 		}
 
-		if (checkIntersect(playerPos, alienGrayPos)) {
+		if (grayAlienAlive &&  checkIntersect(playerPos, alienGrayPos)) {
 			decrementHealth(10);
 		}
 		
