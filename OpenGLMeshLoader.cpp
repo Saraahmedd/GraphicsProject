@@ -56,7 +56,7 @@ Model_3DS model_house;
 Model_3DS model_tree;
 Model_3DS model_brain;
 Model_3DS model_zombieMale;
-Model_3DS model_zombieMale2;
+Model_3DS model_player;
 Model_3DS model_zombieFemale;
 Model_3DS model_hazmat;
 Model_3DS model_alienGray;
@@ -72,9 +72,9 @@ GLTexture tex_zombieMale;
 //model positions
 float playerPos[3] = { 7, 0, 10 }; int playerRot = 0.0;
 float zombieMalePos[3] = { 15, 4, 15 };
-float zombieFemalePos[3] = { 15, 3, 10 };
-float alienGrayPos[3] = { 5, 3, 15 };
-float alienGreenPos[3] = { 5, 3, 20 };
+float zombieFemalePos[3] = { 15, 4, 10 };
+float alienGrayPos[3] = { 5, 4, 15 };
+float alienGreenPos[3] = { 5, 4, 20 };
 float spaceshipPos[3] = { 17, 1, 25 };
 float housePos[3] = { 40,0,10 };
 float shootingPosition[2] = {WIDTH / 2, HEIGHT/2};
@@ -97,6 +97,14 @@ bool gameOverSoundPlayed = false;
 bool isJumping = false;
 float jumpVelocity = 0.0f;
 float gravity = 0.98f; // adjust as needed
+
+bool zombiesAlive[] = { true, true };
+bool aliensAlive[] = { true, true };
+bool maleZombieAlive = true;
+bool femaleZombieAlive = true;
+bool greenAlienAlive = true;
+bool grayAlienAlive = true;
+
 
 
 GLfloat lightIntensity[] = { 0.2, 0.2, 0.2, 1.0f };
@@ -246,17 +254,16 @@ void RenderGround()
 	glColor3f(1, 1, 1);	// Set material back to white instead of grey used for the ground texture.
 }
 
-//void drawHazmat() {
+void drawTree(){
 
-//	glPushMatrix();
-//	glTranslatef(17, 3, 17);
-//	glScalef(2.4, 2.4, 2.4);
-//	glRotatef(90.f, 1, 0, 0);
-//	model_hazmat.Draw();
+	glPushMatrix();
 
-//	glPopMatrix();
+	glTranslatef(0,0,0);
+	glScalef(1,1,1);
+	model_tree.Draw();
 
-//}
+	glPopMatrix();
+}
 
 void drawPlayer() {
 
@@ -265,7 +272,7 @@ void drawPlayer() {
 	glTranslatef(playerPos[0], playerPos[1], playerPos[2]);
 	glScalef(2.4, 2.4, 2.4);
 	glRotatef(playerRot, 0, 1, 0);
-	model_zombieMale2.Draw();
+	model_player.Draw();
 
 	glPopMatrix();
 
@@ -291,7 +298,7 @@ void drawZombieFemale() {
 
 	glPushMatrix();
 	glTranslatef(zombieFemalePos[0], zombieFemalePos[1], zombieFemalePos[2]);
-	glScalef(2.4, 2.4, 2.4);
+	glScalef(0.15, 0.15, 0.15);
 	glRotatef(90.f, 1, 0, 0);
 	model_zombieFemale.Draw();
 
@@ -306,9 +313,9 @@ void drawAlienGray() {
 
 	glPushMatrix();
 	glTranslatef(alienGrayPos[0], alienGrayPos[1], alienGrayPos[2]);
-	glScalef(2.4, 2.4, 2.4);
+	glScalef(0.15, 0.15, 0.15);
 	glRotatef(90.f, 1, 0, 0);
-	glColor3f(0.18, 0.18, 0.18);
+//	glColor3f(0.18, 0.18, 0.18);
 	model_alienGray.Draw();
 
 	glPopMatrix();
@@ -322,9 +329,9 @@ void drawAlienGreen() {
 
 	glPushMatrix();
 	glTranslatef(alienGreenPos[0], alienGreenPos[1], alienGreenPos[2]);
-	glScalef(2.4, 2.4, 2.4);
+	glScalef(0.15, 0.15, 0.15);
 	glRotatef(90.f, 1, 0, 0);
-	glColor3f(0.18, 0.22, 0.16);
+	//glColor3f(0.18, 0.22, 0.16);
 	model_alienGreen.Draw();
 
 	glPopMatrix();
@@ -501,12 +508,6 @@ void drawCrosshair() {
 //=======================================================================
 // Bullet Code 
 //=======================================================================
-
-
-bool maleZombieAlive = true;
-bool femaleZombieAlive = true;
-bool greenAlienAlive = true;
-bool grayAlienAlive = true;
 
 struct Bullet {
 	float posX, posY, posZ; // Position of the bullet
@@ -716,8 +717,9 @@ void myDisplay(void){
 
 
 	if (gameLevel == 1) {
-		drawHouse();
 
+		drawTree();
+		drawHouse();
 		drawBrain();
 
 		if (maleZombieAlive) {
@@ -865,7 +867,8 @@ void myKeyboard(unsigned char button, int x, int y)
 	const GLdouble upDownSpeed = 0.1;
 	const GLdouble movement = 0.1;
 	const GLdouble radiansPerDegree = M_PI / 180.0; // Convert degrees to radians
-
+		GLdouble lookX = sin(playerRot * radiansPerDegree);
+	GLdouble lookZ = cos(playerRot * radiansPerDegree);
 
 	switch (button)
 	{
@@ -963,8 +966,6 @@ void myKeyboard(unsigned char button, int x, int y)
 		break;
 	}
 
-	GLdouble lookX = sin(playerRot * radiansPerDegree);
-	GLdouble lookZ = cos(playerRot * radiansPerDegree);
 
 	if (cameraMode == 1) {
 		// Update the Eye position to be at the player's position
@@ -1093,16 +1094,18 @@ void LoadAssets()
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_brain.Load("Models/brain/brain.3ds");
 	model_zombieMale.Load("Models/Zombie-male/zombieMale.3ds");
-	model_zombieMale2.Load("Models/Player/sci_fi5.3ds");
-	model_zombieFemale.Load("Models/Zombie-female/YX7E6SXK5QENDHI2C2SDRHFV9.3ds");
-	model_alienGray.Load("Models/Alien-gray/RHF0I8IA4NR339RPGEX2E5UU4.3ds");
-	model_alienGreen.Load("Models/Alien-green/K0Y3926GODW8EXPFE835EUWG7.3ds");
+	model_player.Load("Models/Player/sci_fi5.3ds");
+	model_zombieFemale.Load("Models/Zombie-male/zombieMale.3ds");
+	model_alienGray.Load("Models/Alien-gray/alienGray.3ds");
+	model_alienGreen.Load("Models/Alien-green/alienGreen2.3ds");
 	model_star.Load("Models/Star/5ebea14b8ef94f57b1f37ac18211f70e.3ds");
 	model_spaceship.Load("Models/Spaceship/IPFJ80NKQ01QATOPYPW2HQKAD.3ds");
 	
 
 	// Loading texture files
+
 	tex_ground.Load("Textures/ground.bmp");
+
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
 	tex_zombieMale.Load("models/Zombie-male/t0046_1.bmp");
 }
@@ -1155,6 +1158,7 @@ void Timer(int value) {
 		if (checkHouseCollision()) {
 			gameLevel = 2;
 			count = 0;
+			tex_ground.Load("Textures/moon.bmp");
 		}
 
 		if (checkIntersect(playerPos, zombieMalePos)) {
