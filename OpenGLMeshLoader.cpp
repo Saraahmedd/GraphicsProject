@@ -76,10 +76,10 @@ GLTexture tex_zombieMale;
 
 //model positions
 float playerPos[3] = { 7, 0, 10 }; int playerRot = 0.0;
-float zombieMalePos[3] = { 15, 4, 15 };
-float zombieFemalePos[3] = { 15, 4, 10 };
-float alienGrayPos[3] = { 5, 4, 15 };
-float alienGreenPos[3] = { 5, 4, 20 };
+float zombieMalePos[3] = { 17, 4, 33 };
+float zombieFemalePos[3] = { 12, 4, 13 };
+float alienGrayPos[3] = { 12, 4, 15 };
+float alienGreenPos[3] = { 30, 4, 20 };
 float spaceshipPos[3] = { 17, 1, 25 };
 float housePos[3] = { 40,0,10 };
 float shootingPosition[2] = {WIDTH / 2, HEIGHT/2};
