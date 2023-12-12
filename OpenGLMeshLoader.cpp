@@ -559,6 +559,14 @@ void updateBullets(int value) {
 					sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(2));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+
+					auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+					// Check if the bullet was found
+					if (it != bullets.end()) {
+						// Erase the bullet from the vector
+						bullets.erase(it);
+					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
@@ -583,6 +591,13 @@ void updateBullets(int value) {
 					sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(2));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+					auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+					// Check if the bullet was found
+					if (it != bullets.end()) {
+						// Erase the bullet from the vector
+						bullets.erase(it);
+					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
@@ -610,6 +625,14 @@ void updateBullets(int value) {
 					sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+
+					auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+					// Check if the bullet was found
+					if (it != bullets.end()) {
+						// Erase the bullet from the vector
+						bullets.erase(it);
+					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
@@ -634,6 +657,14 @@ void updateBullets(int value) {
 					sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
+
+					auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+					// Check if the bullet was found
+					if (it != bullets.end()) {
+						// Erase the bullet from the vector
+						bullets.erase(it);
+					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
