@@ -8,6 +8,7 @@
 #include <playsoundapi.h>
 #include <thread>
 #include <chrono>
+#include <cstdlib>
 
 
 
@@ -77,7 +78,7 @@ GLTexture tex_zombieMale;
 
 //model positions
 float playerPos[3] = { 7, 0, 10 }; int playerRot = 0.0;
-float zombieMalePos[3] = { 17, 4, 33 };
+float zombieMalePos[3] = { 26, 4, 33 };
 float zombieFemalePos[3] = { 12, 4, 13 };
 float alienGrayPos[3] = { 12, 4, 15 };
 float alienGreenPos[3] = { 30, 4, 20 };
@@ -85,13 +86,13 @@ float spaceshipPos[3] = { 17, 1, 25 };
 float housePos[3] = { 40,0,10 };
 float shootingPosition[2] = {WIDTH / 2, HEIGHT/2};
 
-float starsPos[3][3] = { { 7, 1, 20 },
-						 { 6, 1, 15 },
-						 { 5,1,14 } };
+float starsPos[3][3] = { { 13,2,18 },
+						 { 35,2,28 },
+						 { 16,2,40 } };
 
 float brainsPos[3][3] = { { 13,2,10 },
-						 { 13,2,13 },
-						 { 13,2,15 } };
+						 { 40,2,23 },
+						 { 26,2,40 } };
 
 //controls
 int score = 0, cameraMode = 2 ;
@@ -260,6 +261,32 @@ void RenderGround()
 	glColor3f(1, 1, 1);	// Set material back to white instead of grey used for the ground texture.
 }
 
+
+bool isCameraShaking = false;
+Vector originalEyePosition;
+
+void stopCameraShake(int value) {
+	isCameraShaking = false;
+	Eye = originalEyePosition; // Reset to the original position
+	glutPostRedisplay();
+}
+
+void cameraShake() {
+	originalEyePosition = Eye; // Store the original position
+	isCameraShaking = true;
+	glutTimerFunc(2000, stopCameraShake, 0); // Stop shaking after 2000 milliseconds
+}
+
+void updateCameraShake() {
+	if (isCameraShaking) {
+		// Randomly alter the Eye position within a small range
+		Eye.x += (5) * 0.1;
+		Eye.z += (5) * 0.1;
+
+		glutPostRedisplay(); // Update the display
+	}
+}
+
 void drawTree(){
 
 	glPushMatrix();
@@ -344,7 +371,7 @@ void drawPlayer() {
 	glPushMatrix();
 
 	glTranslatef(playerPos[0], playerPos[1], playerPos[2]);
-	glScalef(2.4, 2.4, 2.4);
+	glScalef(3, 3, 3);
 	glRotatef(playerRot, 0, 1, 0);
 	model_player.Draw();
 
@@ -439,13 +466,11 @@ void drawSpaceship() {
 
 	glPushMatrix();
 	glTranslatef(spaceshipPos[0], spaceshipPos[1], spaceshipPos[2]);
-	glScalef(4,4,4);
+	glScalef(0.6,0.6,0.6);
 	glRotatef(90.f, 1, 0, 0);
-	glColor3f(0.18, 0.18, 0.18);
 	model_spaceship.Draw();
 
 	glPopMatrix();
-	glColor3f(1,1,1);
 }
 
 void drawBrain() {
@@ -469,7 +494,7 @@ void drawHouse() {
 	// Draw house Model
 	glPushMatrix();
 	glTranslatef(housePos[0], housePos[1], housePos[2]);
-	glScalef(3,3,3);
+	glScalef(2.5,2.5,2.5);
 	glRotatef(90.f, 1, 0, 0);
 	model_house.Draw();
 	glPopMatrix();
@@ -856,6 +881,7 @@ void myDisplay(void){
 	RenderGround();
 	drawBorder();
 
+
 	if (gameLevel == 1) {
 
 		drawTree();
@@ -937,6 +963,45 @@ void myDisplay(void){
 	glutSwapBuffers();
 }
 
+void playerJump() {
+	if (!isJumping) {
+		isJumping = true;
+		jumpVelocity = 1.0f; // initial jump velocity, adjust as needed
+	}
+}
+
+void updateCamera() {
+
+	const GLdouble radiansPerDegree = M_PI / 180.0; // Convert degrees to radians
+
+	GLdouble lookX = sin(playerRot * radiansPerDegree);
+	GLdouble lookZ = cos(playerRot * radiansPerDegree);
+
+	if (cameraMode == 1) {
+		// Update the Eye position to be at the player's position
+		Eye.x = playerPos[0];
+		Eye.y = playerPos[1] + 5; // Adjust height if needed
+		Eye.z = playerPos[2];
+
+		// Update the At vector to be in the direction the player is facing
+		At.x = Eye.x + lookX;
+		At.y = Eye.y;
+		At.z = Eye.z + lookZ;
+	}
+
+	if (cameraMode == 3) {
+
+		Eye.x = playerPos[0] - lookX * 10; // Adjust the multiplier for distance behind player
+		Eye.y = playerPos[1] + 5; // Height offset
+		Eye.z = playerPos[2] - lookZ * 10; // Adjust the multiplier for distance behind player
+
+		// For camera mode 3, update the Eye position to stay behind the player's head
+
+		At.x = Eye.x + lookX;
+		At.y = Eye.y;
+		At.z = Eye.z + lookZ;
+	}
+}
 
 //=======================================================================
 // Mouse Function
@@ -964,34 +1029,7 @@ void myMouse(int button, int state, int x, int y)
 			
 		}
 
-		// Calculate the direction the player is looking
-		GLdouble lookX = sin(playerRot * radiansPerDegree);
-		GLdouble lookZ = cos(playerRot * radiansPerDegree);
-
-		if (cameraMode == 1) {
-			// Update the Eye position to be at the player's position
-			Eye.x = playerPos[0];
-			Eye.y = playerPos[1] + 5; // Adjust height if needed
-			Eye.z = playerPos[2];
-
-			// Update the At vector to be in the direction the player is facing
-			At.x = Eye.x + lookX;
-			At.y = Eye.y;
-			At.z = Eye.z + lookZ;
-		}
-
-		if (cameraMode == 3) {
-
-			Eye.x = playerPos[0] - lookX * 10; // Adjust the multiplier for distance behind player
-			Eye.y = playerPos[1] + 5; // Height offset
-			Eye.z = playerPos[2] - lookZ * 10; // Adjust the multiplier for distance behind player
-
-			// For camera mode 3, update the Eye position to stay behind the player's head
-
-			At.x = Eye.x + lookX;
-			At.y = Eye.y;
-			At.z = Eye.z + lookZ;
-		}
+		updateCamera();
 
 		// Update camera view
 		glLoadIdentity();
@@ -1093,10 +1131,7 @@ void myKeyboard(unsigned char button, int x, int y)
 		exit(0);
 		break;
 	case 32: // ASCII code for Spacebar
-		if (!isJumping) {
-			isJumping = true;
-			jumpVelocity = 1.0f; // initial jump velocity, adjust as needed
-		}
+		playerJump();
 		break;
 	case 13: // ASCII code for Enter Key
 		fireBullet();
@@ -1289,12 +1324,12 @@ void LoadAssets()
 	model_border.Load("Models/border/borderSimple.3ds");
 	model_brain.Load("Models/brain/brain.3ds");
 	model_zombieMale.Load("Models/Zombie-male/zombieMale.3ds");
-	model_player.Load("Models/Player/sci_fi5.3ds");
+	model_player.Load("Models/Player/player.3ds");
 	model_zombieFemale.Load("Models/Zombie-male/zombieMale.3ds");
 	model_alienGray.Load("Models/Alien-gray/alienGray.3ds");
 	model_alienGreen.Load("Models/Alien-green/alienGreen2.3ds");
 	model_star.Load("Models/Star/5ebea14b8ef94f57b1f37ac18211f70e.3ds");
-	model_spaceship.Load("Models/Spaceship/IPFJ80NKQ01QATOPYPW2HQKAD.3ds");
+	model_spaceship.Load("Models/Spaceship/spaceShip.3ds");
 	
 
 	// Loading texture files
@@ -1308,12 +1343,17 @@ void LoadAssets()
 void decrementHealth(int damage) { // 0-100 damage
 	if (playerHealth >= damage) {
 		playerHealth -= damage;
+		playerPos[0] -= 1;
+		playerPos[2] -= 1;
+		updateCamera();
+		cameraShake();  // Trigger camera shake when the player takes damage
 		sndPlaySound(TEXT("sounds/playerDamage.wav"), SND_FILENAME | SND_ASYNC);
 		std::this_thread::sleep_for(std::chrono::seconds(1));
 		sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 	}
 	else {
 		playerHealth = 0;
+		cameraShake();  // Trigger camera shake when the player takes damage
 		gameOver = true;
 		gameResult = false;
 	}
@@ -1335,6 +1375,8 @@ void incrementHealth(int heal) {
 
 void Timer(int value) {
 	count++;
+
+	updateCameraShake();
 
 	moveEnemies();
 
