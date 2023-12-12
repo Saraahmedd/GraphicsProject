@@ -59,6 +59,7 @@ int cameraZoom = 0;
 // Model Variables
 Model_3DS model_house;
 Model_3DS model_tree;
+Model_3DS model_border;
 Model_3DS model_brain;
 Model_3DS model_zombieMale;
 Model_3DS model_player;
@@ -269,6 +270,74 @@ void drawTree(){
 
 	glPopMatrix();
 }
+
+void drawBorder() {
+	glPushMatrix();
+	glTranslatef(0, 1, 0); // x directionn between (0,0) & (50,0)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	model_border.Draw();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(25, 1, 0); // x directionn between (0,0) & (50,0)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	model_border.Draw();
+	glPopMatrix();
+
+
+	glPushMatrix();
+	glTranslatef(0, 1, 50); // z directionn between (0,0) & (0,50)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	glRotatef(-90.0, 0, 0, 1);
+	model_border.Draw();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(0, 1, 25); // z directionn between (0,0) & (0,50)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	glRotatef(-90.0, 0, 0, 1);
+	model_border.Draw();
+	glPopMatrix();
+
+
+
+
+	glPushMatrix();
+	glTranslatef(0, 1, 50); // x directionn between (0,50) & (50,50)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	model_border.Draw();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(25, 1, 50); // x directionn between (0,0) & (50,0)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	model_border.Draw();
+	glPopMatrix();
+
+
+	glPushMatrix();
+	glTranslatef(50, 1, 50); // z directionn between (50,0) & (50,50)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	glRotatef(-90.0, 0, 0, 1);
+	model_border.Draw();
+	glPopMatrix();
+
+	glPushMatrix();
+	glTranslatef(50, 1, 25); // z directionn between (0,0) & (0,50)
+	glScalef(4, 4, 4);
+	glRotatef(90.0, 1, 0, 0);
+	glRotatef(-90.0, 0, 0, 1);
+	model_border.Draw();
+	glPopMatrix();
+}
+
 
 void drawPlayer() {
 
@@ -755,7 +824,7 @@ void fireBullet() {
 	}
 
 	sndPlaySound(TEXT("sounds/shoot.wav"), SND_FILENAME | SND_ASYNC);
-	std::this_thread::sleep_for(std::chrono::seconds(2));
+	std::this_thread::sleep_for(std::chrono::seconds(1));
 	sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 
 	int bulletDirection;
@@ -785,7 +854,7 @@ void myDisplay(void){
 
 	// Draw Ground
 	RenderGround();
-
+	drawBorder();
 
 	if (gameLevel == 1) {
 
@@ -957,7 +1026,7 @@ void myKeyboard(unsigned char button, int x, int y)
 		break;
 
 	case 'k': // Move player forward
-		if (playerPos[2] + movement <= 100) // Check boundary along Z-axis
+		if (playerPos[2] + movement <= 50) // Check boundary along Z-axis
 		{
 			playerRot = 0.0;
 			playerPos[2] += movement;
@@ -973,7 +1042,7 @@ void myKeyboard(unsigned char button, int x, int y)
 		break;
 
 	case 'l': // Move player right
-		if (playerPos[0] + movement <= 100) // Check boundary along X-axis
+		if (playerPos[0] + movement <= 50) // Check boundary along X-axis
 		{
 			playerRot = 90.0;
 			playerPos[0] += movement;
@@ -1217,6 +1286,7 @@ void LoadAssets()
 	// Loading Model files
 	model_house.Load("Models/house/house.3DS");
 	model_tree.Load("Models/tree/Tree1.3ds");
+	model_border.Load("Models/border/borderSimple.3ds");
 	model_brain.Load("Models/brain/brain.3ds");
 	model_zombieMale.Load("Models/Zombie-male/zombieMale.3ds");
 	model_player.Load("Models/Player/sci_fi5.3ds");
@@ -1312,7 +1382,7 @@ void Timer(int value) {
 				brains[i] = true;
 				score += 5;
 				sndPlaySound(TEXT("sounds/collect.wav"), SND_FILENAME | SND_ASYNC);
-				std::this_thread::sleep_for(std::chrono::seconds(2));
+				std::this_thread::sleep_for(std::chrono::seconds(1));
 				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
 			}
 			if (!brainsFound) {
@@ -1452,6 +1522,7 @@ void main(int argc, char** argv)
 	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_COLOR_MATERIAL);
+
 
 	glutTimerFunc(0, Timer, 0);
 	glShadeModel(GL_SMOOTH);
