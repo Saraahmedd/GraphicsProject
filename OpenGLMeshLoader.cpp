@@ -932,8 +932,6 @@ void myDisplay(void){
 		}
 	}
 
-	
-
 	//sky box
 	glPushMatrix();
 
