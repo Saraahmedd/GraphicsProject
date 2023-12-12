@@ -1183,6 +1183,8 @@ void myKeyboard(unsigned char button, int x, int y)
 		break;
 	}
 
+	GLdouble lookX = sin(playerRot * radiansPerDegree);
+	GLdouble lookZ = cos(playerRot * radiansPerDegree);
 
 	if (cameraMode == 1) {
 		// Update the Eye position to be at the player's position
