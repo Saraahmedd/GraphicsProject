@@ -19,6 +19,7 @@ int count;
 int WIDTH = 1280;
 int HEIGHT = 720;
 
+
 GLuint tex;
 char title[] = "3D Model Loader Sample";
 
@@ -34,6 +35,10 @@ int maleZombiehits = 0;
 int femaleZombiehits = 0;
 int greenAlienHits = 0;
 int grayAlienHits = 0;
+bool showDamageIndicator = false;
+bool shakeCamera = false;
+int shakeTimer = 0;
+
 
 
 
@@ -224,6 +229,13 @@ void myInit(void)
 	//*******************************************************************************************//
 
 	InitLightSource();
+
+	// Initialize additional light for damage indicator
+	GLfloat defaultLight[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	GLfloat defaultLightPosition[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, defaultLight);
+	glLightfv(GL_LIGHT2, GL_POSITION, defaultLightPosition);
+	glDisable(GL_LIGHT2);
 
 	InitMaterial();
 
@@ -816,6 +828,11 @@ bool checkHouseCollision() {
 }
 
 bool checkCollisionWithSpaceship() {
+	if (gameOver) {
+		// Game is over, no collision check needed
+		return false;
+	}
+
 	// Assuming the spaceship is a rectangular object
 	float spaceshipMinX = spaceshipPos[0] - 2;  // Adjust based on spaceship dimensions
 	float spaceshipMaxX = spaceshipPos[0] + 2;
@@ -880,6 +897,29 @@ void myDisplay(void){
 	// Draw Ground
 	RenderGround();
 	drawBorder();
+
+	if (shakeCamera && shakeTimer < 2000) {
+		glPushMatrix(); // Save the current matrix state
+
+		// Shake the camera horizontally
+		double offsetX = 2.0 * sin(shakeTimer * 0.01); // Adjust the multiplier for intensity
+		glTranslated(offsetX, 0.0, 0.0);
+		shakeTimer += 16; // Adjust as needed
+
+		glPopMatrix(); // Restore the saved matrix state
+	}
+
+	if (showDamageIndicator) {
+		// Render red light at player's position
+		glEnable(GL_LIGHT2);
+		GLfloat redLight[] = { 1.0f, 0.0f, 0.0f, 1.0f };
+		GLfloat redLightPosition[] = { playerPos[0], playerPos[1] + 2.0f, playerPos[2], 1.0f };
+		glLightfv(GL_LIGHT2, GL_DIFFUSE, redLight);
+		glLightfv(GL_LIGHT2, GL_POSITION, redLightPosition);
+	}
+	else {
+		glDisable(GL_LIGHT2); // Turn off the additional light source
+	}
 
 
 	if (gameLevel == 1) {
@@ -1043,8 +1083,12 @@ void myKeyboard(unsigned char button, int x, int y)
 	const GLdouble upDownSpeed = 0.1;
 	const GLdouble movement = 0.1;
 	const GLdouble radiansPerDegree = M_PI / 180.0; // Convert degrees to radians
-		GLdouble lookX = sin(playerRot * radiansPerDegree);
-	GLdouble lookZ = cos(playerRot * radiansPerDegree);
+
+	if (gameOver) {
+		// Game is over, don't process keyboard input
+		return;
+	}
+
 
 	switch (button)
 	{
@@ -1210,6 +1254,11 @@ void myMotion(int x, int y)
 
 void moveEnemies() {
 
+	if (gameOver) {
+		// Game is over, stop enemy movement
+		return;
+	}
+
 	if (gameLevel == 1) {
 		// Move zombies towards the player
 		float zombieMovement = 0.2f;
@@ -1338,9 +1387,23 @@ void LoadAssets()
 	tex_zombieMale.Load("models/Zombie-male/t0046_1.bmp");
 }
 
+void damageIndicatorTimer(int value) {
+	showDamageIndicator = false; // Turn off damage indicator
+	glutPostRedisplay();
+}
+void shakeCameraTimer(int value) {
+	shakeTimer = 0;
+	shakeCamera = false; // Turn off camera shake
+	glutPostRedisplay();
+}
+
 void decrementHealth(int damage) { // 0-100 damage
 	if (playerHealth >= damage) {
 		playerHealth -= damage;
+		showDamageIndicator = true; // Activate damage indicator
+		shakeCamera = true; // Activate camera shake
+		glutTimerFunc(2000, damageIndicatorTimer, 0); // Start damage indicator timer
+		glutTimerFunc(2000, shakeCameraTimer, 0); // Start camera shake timer		sndPlaySound(TEXT("sounds/playerDamage.wav"), SND_FILENAME | SND_ASYNC);
 		playerPos[0] -= 1;
 		playerPos[2] -= 1;
 		updateCamera();
@@ -1371,6 +1434,7 @@ void incrementHealth(int heal) {
 	}
 }
 
+
 void Timer(int value) {
 	count++;
 
@@ -1387,6 +1451,11 @@ void Timer(int value) {
 		// Set light color to purple-ish for level 2
 		GLfloat purpleishLight[] = { 0.5, 0.0, 0.6, 1.0 };
 		glLightfv(GL_LIGHT0, GL_DIFFUSE, purpleishLight);
+	}
+
+	if (gameOver) {
+		// Stop player movement and enemy movement
+		return;
 	}
 
 	if (gameLevel == 1) {
@@ -1406,7 +1475,14 @@ void Timer(int value) {
 			decrementHealth(10);
 		}
 
+		if (showDamageIndicator) {
+			// Start damage indicator timer
+			glutTimerFunc(2000, damageIndicatorTimer, 0);
+		}
 
+		if (shakeCamera && shakeTimer < 2000) {
+			shakeTimer += 16; // Adjust as needed
+		}
 
 		//Zombies game (Level 1)
 		if (count == 100 && !gameOver ) {
