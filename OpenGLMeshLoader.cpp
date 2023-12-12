@@ -1529,7 +1529,7 @@ void Timer(int value) {
 		for (int i = 0; i < 3 && !gameOver; i++) {
 			if (brains[i] == false && checkIntersect(playerPos, brainsPos[i])) {
 				brains[i] = true;
-				score += 5;
+				score += 50;
 				sndPlaySound(TEXT("sounds/collect.wav"), SND_FILENAME | SND_ASYNC);
 				std::this_thread::sleep_for(std::chrono::seconds(1));
 				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
@@ -1573,7 +1573,7 @@ void Timer(int value) {
 		for (int i = 0; i < 3 && !gameOver; i++) {
 			if (stars[i] == false && checkIntersect(playerPos, starsPos[i])) {
 				stars[i] = true;
-				score += 5;
+				score += 50;
 				sndPlaySound(TEXT("sounds/collect.wav"), SND_FILENAME | SND_ASYNC);
 				std::this_thread::sleep_for(std::chrono::seconds(2));
 				sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
