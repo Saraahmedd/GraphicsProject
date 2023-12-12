@@ -649,19 +649,21 @@ void updateBullets(int value) {
 			if (maleZombieAlive && checkIntersect(bulletPos, zombieMalePos)) {
 				score += 50;
 				maleZombiehits++;
+
+				auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+				// Check if the bullet was found
+				if (it != bullets.end()) {
+					// Erase the bullet from the vector
+					bullets.erase(it);
+				}
+
+
 				if (maleZombiehits == 2) {
 					maleZombieAlive = false;
 					sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(2));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
-
-					auto it = std::find(bullets.begin(), bullets.end(), bullet);
-
-					// Check if the bullet was found
-					if (it != bullets.end()) {
-						// Erase the bullet from the vector
-						bullets.erase(it);
-					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
@@ -681,18 +683,21 @@ void updateBullets(int value) {
 			if (femaleZombieAlive && checkIntersect(bulletPos, zombieFemalePos)) {
 				score += 50;
 				femaleZombiehits++;
+
+				auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+				// Check if the bullet was found
+				if (it != bullets.end()) {
+					// Erase the bullet from the vector
+					bullets.erase(it);
+				}
+
+
 				if (femaleZombiehits == 2) {
 					femaleZombieAlive = false;
 					sndPlaySound(TEXT("sounds/zombieDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(2));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
-					auto it = std::find(bullets.begin(), bullets.end(), bullet);
-
-					// Check if the bullet was found
-					if (it != bullets.end()) {
-						// Erase the bullet from the vector
-						bullets.erase(it);
-					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
@@ -715,19 +720,22 @@ void updateBullets(int value) {
 			if (greenAlienAlive && checkIntersect(bulletPos, alienGreenPos)) {
 				score += 100;
 				greenAlienHits++;
+
+
+				auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+				// Check if the bullet was found
+				if (it != bullets.end()) {
+					// Erase the bullet from the vector
+					bullets.erase(it);
+				}
+
+
 				if (greenAlienHits == 2) {
 					greenAlienAlive = false;
 					sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
-
-					auto it = std::find(bullets.begin(), bullets.end(), bullet);
-
-					// Check if the bullet was found
-					if (it != bullets.end()) {
-						// Erase the bullet from the vector
-						bullets.erase(it);
-					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
@@ -747,19 +755,20 @@ void updateBullets(int value) {
 			if (grayAlienAlive && checkIntersect(bulletPos, alienGrayPos)) {
 				score += 100;
 				grayAlienHits++;
+
+				auto it = std::find(bullets.begin(), bullets.end(), bullet);
+
+				// Check if the bullet was found
+				if (it != bullets.end()) {
+					// Erase the bullet from the vector
+					bullets.erase(it);
+				}
+
 				if (grayAlienHits == 2) {
 					grayAlienAlive = false;
 					sndPlaySound(TEXT("sounds/alienDeath.wav"), SND_FILENAME | SND_ASYNC);
 					std::this_thread::sleep_for(std::chrono::seconds(3));
 					sndPlaySound(TEXT("sounds/gameBackground.wav"), SND_FILENAME | SND_ASYNC);
-
-					auto it = std::find(bullets.begin(), bullets.end(), bullet);
-
-					// Check if the bullet was found
-					if (it != bullets.end()) {
-						// Erase the bullet from the vector
-						bullets.erase(it);
-					}
 				}
 				else {
 					for (int i = 0; i < 3; ++i) {
